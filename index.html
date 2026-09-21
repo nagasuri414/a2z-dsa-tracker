@@ -131,6 +131,10 @@
   .goal-form input[type=number]{width:110px}
   .report-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
   .report-head .goal-title{flex:1}
+  .report-toggle{background:none;border:0;padding:2px;margin-top:2px;cursor:pointer;color:var(--faint);flex:none}
+  .report-toggle .chev{width:13px;height:13px;stroke:var(--faint);fill:none;stroke-width:2.2;
+    stroke-linecap:round;stroke-linejoin:round;transition:transform .18s;display:block}
+  .report-toggle.open .chev{transform:rotate(90deg)}
   .report-note{margin-top:12px;padding:9px 12px;border-radius:var(--r-sm);
     background:color-mix(in srgb,#fbbf24 10%,var(--surface));color:var(--muted);font-size:12px;line-height:1.45}
   .report-section{margin-top:19px;border-top:1px solid var(--line-soft);padding-top:16px}
@@ -152,8 +156,8 @@
   .pace-line{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
   .pace-line b{color:var(--text)}
   .activity{margin-top:0}
-  .daily-bars{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:5px;
-    height:114px;margin:12px 0 15px;padding:7px 4px 0;border-bottom:1px solid var(--line-soft)}
+  .daily-bars{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));align-items:end;gap:5px;
+    margin:12px 0 15px;padding:7px 4px 0;border-bottom:1px solid var(--line-soft)}
   .daily-bar{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:0}
   .daily-bar .bar-count{font-size:10px;color:var(--muted);height:15px}
   .daily-bar .bar-fill{display:block;width:min(100%,24px);border-radius:4px 4px 0 0;
@@ -334,7 +338,7 @@
 
   <div class="top">
     <div class="brand">
-      <h1>Striver A2Z DSA Tracker</h1>
+      <h1>A2Z DSA Tracker</h1>
       <p>456 problems · 18 steps · cross-checked against 3 sources</p>
     </div>
     <div class="grow"></div>
@@ -552,7 +556,8 @@ const ICON = {
 
 /* ---------------- state ---------------- */
 let state = load(), fileHandle = null, fileName = "", writeTimer = null,
-    goalEditing = false, activityDate = "";
+    goalEditing = false, activityDate = "",
+    reportCollapsed = ls.get(KEY + "-report-collapsed") === "1";
 
 function blank(){
   return {schema:SCHEMA, items:{}, goal:null, lastBackup:null, changes:0};
@@ -1090,9 +1095,15 @@ function renderGoal(){
         · Projected finish: <b>${remaining===0?"Goal reached":projected?esc(prettyDate(projected)):pace.days<7?"not enough history yet":"no recent dated solves"}</b></div>
     </section>`;
   }
-  el.innerHTML=`<div class="report-head"><div class="goal-title"><h2>Progress report</h2>
+  el.innerHTML=`<div class="report-head">
+    <button class="report-toggle${reportCollapsed?"":" open"}" id="reportToggle" aria-expanded="${!reportCollapsed}"
+      aria-controls="reportBody" title="${reportCollapsed?"Expand":"Collapse"} progress report">
+      <svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+    <div class="goal-title"><h2>Progress report</h2>
     <p>${goalIntro}</p></div>
     ${goal&&!goalEditing?'<button class="btn btn-quiet" id="goalEdit">Adjust goal</button>':""}</div>
+    <div class="report-body${reportCollapsed?" hidden":""}" id="reportBody">
     ${!goal||goalEditing?goalForm(goal):""}
     <div class="goal-kpis">
       <div class="goal-kpi"><span>Today</span><b>${todayCount}</b><small>${esc(todayHint)}</small></div>
@@ -1101,10 +1112,16 @@ function renderGoal(){
       <div class="goal-kpi"><span>This month</span><b>${month}</b><small>Since the 1st</small></div>
     </div>
     ${undated?`<div class="report-note">${undated} solved problem${undated===1?"":"s"} lack a usable completion date. They count toward your total, but not daily graphs. Add known dates using Download Excel → Upload Excel.</div>`:""}
-    ${goalSection}${activityPanel(times)}`;
+    ${goalSection}${activityPanel(times)}</div>`;
   if(!goal||goalEditing) bindGoalForm(goal);
   const edit=document.getElementById("goalEdit");
   if(edit) edit.onclick=()=>{goalEditing=true;renderGoal();};
+  const toggle=document.getElementById("reportToggle");
+  if(toggle) toggle.onclick=()=>{
+    reportCollapsed=!reportCollapsed;
+    ls.set(KEY+"-report-collapsed", reportCollapsed?"1":"0");
+    renderGoal();
+  };
   bindActivity();
 }
 
