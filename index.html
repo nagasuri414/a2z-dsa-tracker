@@ -945,11 +945,22 @@ const dateOnly = ts => {
   return `${y}-${m}-${n}`;
 };
 const prettyDate = ts => new Date(ts).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});
-const solvedTimes = () => Object.values(state.items).filter(s => s.done && s.doneAt).map(s => +s.doneAt)
-  .filter(Number.isFinite).sort((a,b) => a-b);
+const solvedTimes = () => {
+  const now = Date.now();
+  return DATA.map(p => state.items[p.k] || {}).filter(s => s.done && s.doneAt).map(s => +s.doneAt)
+    .filter(t => Number.isFinite(t) && t > 0 && t <= now).sort((a,b) => a-b);
+};
 const solvedCount = () => DATA.filter(p => (state.items[p.k]||{}).done).length;
-const countBetween = (times, a, b) => times.filter(t => t >= a && t < b).length;
-function dayStart(t){ const d=new Date(t); d.setHours(0,0,0,0); return +d; }
+// Compare local calendar dates, not 24-hour blocks (which drift at daylight-saving changes).
+const calendarDay = ts => { const d = new Date(ts); return Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/DAY); };
+const countDays = (times, first, last) => times.filter(t => { const d=calendarDay(t); return d>=first && d<=last; }).length;
+const addCalendarDays = (ts, days) => { const d=new Date(ts); d.setDate(d.getDate()+days); return +d; };
+const rateText = n => n>0 && n<0.01 ? "<0.01" : n.toFixed(2);
+function recentPace(times, now){
+  if(!times.length) return {rate:0, days:0};
+  const today=calendarDay(now), first=Math.max(calendarDay(times[0]),today-27);
+  return {rate:countDays(times,first,today)/(today-first+1), days:today-first+1};
+}
 function monday(ts){
   const d = new Date(ts); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay()+6)%7)); return +d;
 }
@@ -984,16 +995,19 @@ function burnChart(goal, done, times){
         target=+new Date(goal.targetDate+"T23:59:59"), end=Math.max(target,now,start+DAY),
         maxY=Math.max(goal.targetTotal,done,1), x=t=>L+(Math.max(start,Math.min(end,t))-start)/(end-start)*(W-L-R),
         y=v=>T+(1-Math.max(0,Math.min(maxY,v))/maxY)*(H-T-B);
-  let n=goal.baselineDone||0;
+  // Backfilled dates and undone problems must not make the line exceed today's total.
+  const sinceStart=times.filter(t=>t>=start && t<=now);
+  const baseline=Math.max(0,done-sinceStart.length);
+  let n=baseline;
   const pts=[[start,n]];
-  times.filter(t=>t>=start).forEach(t=>{ n++; pts.push([t,n]); });
+  sinceStart.forEach(t=>{ n++; pts.push([t,n]); });
   pts.push([now,done]);
   const actual=pts.map(p=>`${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join(" ");
   const tx=x(target), ty=y(goal.targetTotal), cx=x(now), cy=y(done);
   return `<div class="goal-chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Actual progress compared with target pace">
     <line class="grid" x1="${L}" y1="${y(0)}" x2="${W-R}" y2="${y(0)}"/>
     <line class="grid" x1="${L}" y1="${y(maxY/2)}" x2="${W-R}" y2="${y(maxY/2)}"/>
-    <polyline class="target" points="${x(start)},${y(goal.baselineDone||0)} ${tx},${ty}"/>
+    <polyline class="target" points="${x(start)},${y(baseline)} ${tx},${ty}"/>
     <polyline class="actual" points="${actual}"/><circle cx="${cx}" cy="${cy}" r="4"/>
     <text x="${L}" y="${H-6}">${esc(prettyDate(start))}</text>
     <text x="${Math.max(L,tx-72)}" y="${H-6}">Target ${esc(prettyDate(target))}</text>
@@ -1004,12 +1018,13 @@ function activityPanel(times){
   const now=Date.now(); if(!activityDate) activityDate=dateOnly(now);
   const counts={}; times.forEach(t=>{const d=dateOnly(t);counts[d]=(counts[d]||0)+1;});
   const yd=new Date(); yd.setDate(yd.getDate()-1); const yesterday=dateOnly(yd), today=dateOnly(now);
-  const selected=counts[activityDate]||0, through=times.filter(t=>t<=+new Date(activityDate+"T23:59:59")).length;
-  const names=DATA.filter(p=>{const s=state.items[p.k]||{};return s.doneAt&&dateOnly(+s.doneAt)===activityDate;})
+  const selected=counts[activityDate]||0, through=times.filter(t=>dateOnly(t)<=activityDate).length;
+  const names=DATA.filter(p=>{const s=state.items[p.k]||{};return s.done&&s.doneAt&&+s.doneAt<=now&&dateOnly(+s.doneAt)===activityDate;})
     .map(p=>p.n);
-  const start=monday(now)-25*7*DAY;
+  const start=new Date(monday(now)); start.setDate(start.getDate()-25*7);
   const cells=Array.from({length:26*7},(_,i)=>{
-    const ts=start+i*DAY,d=dateOnly(ts),n=counts[d]||0,level=n?Math.min(4,n):0;
+    const day=new Date(start); day.setDate(day.getDate()+i);
+    const ts=+day,d=dateOnly(ts),n=counts[d]||0,level=n?Math.min(4,n):0;
     return `<button class="heat${level?` l${level}`:""}${d===activityDate?" selected":""}" data-day="${d}"
       title="${esc(prettyDate(ts))}: ${n} solved" aria-label="${esc(prettyDate(ts))}: ${n} solved"></button>`;
   }).join("");
@@ -1024,7 +1039,7 @@ function activityPanel(times){
     <div class="heatmap-wrap"><div class="heatmap">${cells}</div></div>
     <div class="day-detail"><input type="date" id="activityDate" value="${activityDate}">
       <div class="day-summary"><b>${selected}</b> solved on ${esc(prettyDate(activityDate+"T12:00:00"))} ·
-        <b>${through}</b> solved through that date
+        <b>${through}</b> dated solves through that date
         <div class="day-problems">${names.length?esc(names.join(" · ")):"No recorded completions on this date."}</div>
       </div></div></div>`, "sub");
 }
@@ -1067,23 +1082,26 @@ function renderGoal(){
     bindGoalForm(goal); return;
   }
   const target=+new Date(goal.targetDate+"T23:59:59"), remaining=Math.max(0,goal.targetTotal-done),
-        days=Math.max(Math.ceil((target-now)/DAY),0), recent=countBetween(times,now-28*DAY,now+1)/28,
-        needed=remaining===0?0:(days>0?remaining/days:Infinity), projected=recent>0?now+(remaining/recent)*DAY:null,
-        week=countBetween(times,monday(now),now+1), month=countBetween(times,monthStart(now),now+1),
-        current=countBetween(times,now-rangeDays*DAY,now+1), previous=countBetween(times,now-2*rangeDays*DAY,now-rangeDays*DAY),
-        active=new Set(times.filter(t=>t>=now-rangeDays*DAY).map(dateOnly)).size,
-        unknown=DATA.filter(p=>{const s=state.items[p.k]||{};return s.done&&!s.doneAt}).length,
-        delta=current-previous, paceText=recent?recent.toFixed(1)+" / day":"No dated pace yet",
-        needText=!isFinite(needed)?"Target date passed":needed.toFixed(1)+" / day",
-        todayCount=countBetween(times,dayStart(now),now+1),
+        today=calendarDay(now), days=Math.max(calendarDay(target)-today+1,0),
+        pace=recentPace(times,now), recent=pace.rate,
+        needed=remaining===0?0:(days>0?remaining/days:Infinity),
+        projected=pace.days>=7 && recent>0 ? addCalendarDays(now,Math.ceil(remaining/recent)) : null,
+        week=countDays(times,calendarDay(monday(now)),today), month=countDays(times,calendarDay(monthStart(now)),today),
+        current=countDays(times,today-rangeDays+1,today),
+        previous=countDays(times,today-2*rangeDays+1,today-rangeDays),
+        active=new Set(times.filter(t=>calendarDay(t)>=today-rangeDays+1).map(dateOnly)).size,
+        unknown=DATA.filter(p=>{const s=state.items[p.k]||{};return s.done&&(!Number.isFinite(+s.doneAt)||+s.doneAt<=0||+s.doneAt>now)}).length,
+        delta=current-previous, paceText=pace.days?rateText(recent)+" / day":"No dated pace yet",
+        needText=!isFinite(needed)?"Target date passed":rateText(needed)+" / day",
+        todayCount=countDays(times,today,today),
         todayTarget=remaining===0?0:(isFinite(needed)?Math.max(1,Math.ceil(needed)):0),
         todayLeft=Math.max(0,todayTarget-todayCount),
         todayNote=remaining===0?"Goal reached"
           :todayTarget===0?"Set a new target date"
-          :todayLeft===0?`Today's target met${todayCount>todayTarget?` · ${todayCount-todayTarget} ahead`:""}`
-          :`${todayLeft} more to stay on track`,
-        projection=remaining===0?"Goal reached":projected?prettyDate(projected):"Needs 4 weeks of history",
-        action=remaining===0?"Complete":!isFinite(needed)?"Choose a new date":recent>=needed?"On pace":`${(needed-recent).toFixed(1)} more / day`;
+          :todayLeft===0?`Today's suggested target met${todayCount>todayTarget?` · ${todayCount-todayTarget} extra`:""}`
+          :`${todayLeft} more toward today's suggested target`,
+        projection=remaining===0?"Goal reached":projected?prettyDate(projected):pace.days<7?"Needs 7 days since first dated solve":"No recent dated solves",
+        action=remaining===0?"Complete":!isFinite(needed)?"Choose a new date":pace.days<7?"Early pace estimate":recent>=needed?"On pace":`${rateText(needed-recent)} more / day`;
   const trend = panel("trend", "Progress over time",
     `${esc(action)}`,
     `${burnChart(goal,done,times)}
@@ -1094,12 +1112,12 @@ function renderGoal(){
   el.innerHTML=`<details class="panel report" data-panel="report"${panelOpen.report!==false?" open":""}>
     <summary><svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
       <div class="goal-title"><h2>${done} / ${goal.targetTotal} by ${esc(prettyDate(target))}</h2>
-      <p>${remaining} remaining · ${Math.max(0,Math.ceil((target-now)/DAY))} days left${unknown?` · ${unknown} older completion${unknown===1?"":"s"} have no date`:""}</p></div>
+      <p>${remaining} remaining · ${days} calendar day${days===1?"":"s"} left${unknown?` · ${unknown} completion${unknown===1?"":"s"} lack a usable date`:""}</p></div>
       <button class="btn btn-quiet" id="goalEdit">Adjust goal</button></summary>
     <div class="p-body">
     <div class="goal-kpis">
       <div class="goal-kpi ${todayTarget&&todayLeft===0?"met":""}"><span>Today</span><b>${todayCount}${todayTarget?` / ${todayTarget}`:""}</b><small class="goal-action">${esc(todayNote)}</small></div>
-      <div class="goal-kpi"><span>Your pace</span><b>${paceText}</b><small>Trailing 28 days</small></div>
+      <div class="goal-kpi"><span>Your pace</span><b>${paceText}</b><small>${pace.days ? `${pace.days}-day observation window` : "No dated history"} (up to 28 days)</small></div>
       <div class="goal-kpi"><span>Needed pace</span><b>${needText}</b><small class="goal-action">${action}</small></div>
       <div class="goal-kpi"><span>Projected finish</span><b>${projection}</b><small>At your recent pace</small></div>
       <div class="goal-kpi"><span>Recent output</span><b>${week} this week</b><small>${month} this month · ${days} day${days===1?"":"s"} left</small></div>
