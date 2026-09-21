@@ -1,1 +1,182 @@
-{}
+{
+  "s9-implement-stack-using-arrays": {
+    "trick": "Keep the top index one past the last value. Push writes at that index; pop decreases it. A fixed-capacity array makes overflow explicit.",
+    "time": "O(1) per operation",
+    "space": "O(capacity)",
+    "code": "#include <stdexcept>\n#include <vector>\nusing namespace std;\nclass ArrayStack {\n    vector<int> data;\n    int size_ = 0;\npublic:\n    explicit ArrayStack(int capacity) : data(capacity < 0 ? 0 : capacity) {\n        if (capacity < 0) throw invalid_argument(\"negative capacity\");\n    }\n    void push(int value) {\n        if (size_ == (int)data.size()) throw overflow_error(\"stack full\");\n        data[size_++] = value;\n    }\n    int pop() {\n        if (size_ == 0) throw underflow_error(\"stack empty\");\n        return data[--size_];\n    }\n    int top() const {\n        if (size_ == 0) throw underflow_error(\"stack empty\");\n        return data[size_ - 1];\n    }\n    bool empty() const { return size_ == 0; }\n    int size() const { return size_; }\n};"
+  },
+  "s9-implement-queue-using-arrays": {
+    "trick": "Use a circular array: front points to the first element and size tracks occupancy. Wrap the insert position modulo capacity.",
+    "time": "O(1) per operation",
+    "space": "O(capacity)",
+    "code": "#include <stdexcept>\n#include <vector>\nusing namespace std;\nclass CircularQueue {\n    vector<int> data;\n    int front_ = 0, size_ = 0;\npublic:\n    explicit CircularQueue(int capacity) : data(capacity) {\n        if (capacity <= 0) throw invalid_argument(\"capacity must be positive\");\n    }\n    void push(int value) {\n        if (size_ == (int)data.size()) throw overflow_error(\"queue full\");\n        data[(front_ + size_) % data.size()] = value;\n        ++size_;\n    }\n    int pop() {\n        if (size_ == 0) throw underflow_error(\"queue empty\");\n        int value = data[front_];\n        front_ = (front_ + 1) % data.size();\n        --size_;\n        return value;\n    }\n    int front() const {\n        if (size_ == 0) throw underflow_error(\"queue empty\");\n        return data[front_];\n    }\n    bool empty() const { return size_ == 0; }\n    int size() const { return size_; }\n};"
+  },
+  "s9-implement-stack-using-queue": {
+    "trick": "After pushing a new value into one queue, rotate every older value behind it. The new value then sits at the front as the stack top.",
+    "time": "O(n) push; O(1) pop/top",
+    "space": "O(n)",
+    "code": "#include <queue>\n#include <stdexcept>\nusing namespace std;\nclass StackWithQueue {\n    queue<int> q;\npublic:\n    void push(int value) {\n        q.push(value);\n        for (int i = 0, old = (int)q.size() - 1; i < old; ++i) {\n            q.push(q.front());\n            q.pop();\n        }\n    }\n    int pop() {\n        if (q.empty()) throw underflow_error(\"stack empty\");\n        int value = q.front();\n        q.pop();\n        return value;\n    }\n    int top() const {\n        if (q.empty()) throw underflow_error(\"stack empty\");\n        return q.front();\n    }\n    bool empty() const { return q.empty(); }\n};"
+  },
+  "s9-implement-queue-using-stack": {
+    "trick": "Push into an input stack. For front/pop, move input to output only when output is empty; each item moves at most once.",
+    "time": "O(1) amortized per operation; O(n) worst-case front/pop",
+    "space": "O(n)",
+    "code": "#include <stack>\n#include <stdexcept>\nusing namespace std;\nclass QueueWithStacks {\n    stack<int> input, output;\n    void refill() {\n        if (!output.empty()) return;\n        while (!input.empty()) {\n            output.push(input.top());\n            input.pop();\n        }\n    }\npublic:\n    void push(int value) { input.push(value); }\n    int front() {\n        refill();\n        if (output.empty()) throw underflow_error(\"queue empty\");\n        return output.top();\n    }\n    int pop() {\n        int value = front();\n        output.pop();\n        return value;\n    }\n    bool empty() const { return input.empty() && output.empty(); }\n};"
+  },
+  "s9-implement-stack-using-linkedlist": {
+    "trick": "Treat the linked-list head as the stack top. Push and pop change only the head link.",
+    "time": "O(1) per operation",
+    "space": "O(n) nodes",
+    "code": "#include <stdexcept>\nusing namespace std;\nclass LinkedStack {\n    struct Node { int value; Node* next; };\n    Node* head = nullptr;\npublic:\n    LinkedStack() = default;\n    LinkedStack(const LinkedStack&) = delete;\n    LinkedStack& operator=(const LinkedStack&) = delete;\n    ~LinkedStack() { while (head) pop(); }\n    void push(int value) { head = new Node{value, head}; }\n    int pop() {\n        if (!head) throw underflow_error(\"stack empty\");\n        Node* old = head;\n        int value = old->value;\n        head = old->next;\n        delete old;\n        return value;\n    }\n    int top() const {\n        if (!head) throw underflow_error(\"stack empty\");\n        return head->value;\n    }\n    bool empty() const { return head == nullptr; }\n};"
+  },
+  "s9-implement-queue-using-linkedlist": {
+    "trick": "Keep both head and tail pointers. Enqueue at the tail and dequeue at the head; reset tail when the queue becomes empty.",
+    "time": "O(1) per operation",
+    "space": "O(n) nodes",
+    "code": "#include <stdexcept>\nusing namespace std;\nclass LinkedQueue {\n    struct Node { int value; Node* next; };\n    Node* head = nullptr;\n    Node* tail = nullptr;\npublic:\n    LinkedQueue() = default;\n    LinkedQueue(const LinkedQueue&) = delete;\n    LinkedQueue& operator=(const LinkedQueue&) = delete;\n    ~LinkedQueue() { while (head) pop(); }\n    void push(int value) {\n        Node* node = new Node{value, nullptr};\n        if (tail) tail->next = node;\n        else head = node;\n        tail = node;\n    }\n    int pop() {\n        if (!head) throw underflow_error(\"queue empty\");\n        Node* old = head;\n        int value = old->value;\n        head = old->next;\n        if (!head) tail = nullptr;\n        delete old;\n        return value;\n    }\n    int front() const {\n        if (!head) throw underflow_error(\"queue empty\");\n        return head->value;\n    }\n    bool empty() const { return head == nullptr; }\n};"
+  },
+  "s9-check-for-balanced-paranthesis": {
+    "trick": "Push opening brackets. Each closing bracket must match the latest unmatched opening bracket; the stack must be empty at the end.",
+    "time": "O(n)",
+    "space": "O(n)",
+    "code": "#include <stack>\n#include <string>\nusing namespace std;\nbool balancedBrackets(const string& s) {\n    stack<char> open;\n    for (char ch : s) {\n        if (ch == '(' || ch == '[' || ch == '{') open.push(ch);\n        else if (ch == ')' || ch == ']' || ch == '}') {\n            if (open.empty()) return false;\n            char need = ch == ')' ? '(' : (ch == ']' ? '[' : '{');\n            if (open.top() != need) return false;\n            open.pop();\n        }\n    }\n    return open.empty();\n}"
+  },
+  "s9-implement-min-stack": {
+    "trick": "Store the minimum so far alongside every pushed value. Then top, pop, and getMin all take constant time.",
+    "time": "O(1) per operation",
+    "space": "O(n)",
+    "code": "#include <algorithm>\n#include <stdexcept>\n#include <vector>\n#include <utility>\nusing namespace std;\nclass MinStack {\n    vector<pair<int,int>> data;\npublic:\n    void push(int value) {\n        int minimum = data.empty() ? value : min(value, data.back().second);\n        data.push_back({value, minimum});\n    }\n    void pop() {\n        if (data.empty()) throw underflow_error(\"stack empty\");\n        data.pop_back();\n    }\n    int top() const {\n        if (data.empty()) throw underflow_error(\"stack empty\");\n        return data.back().first;\n    }\n    int getMin() const {\n        if (data.empty()) throw underflow_error(\"stack empty\");\n        return data.back().second;\n    }\n};"
+  },
+  "s9-infix-to-postfix-conversion-using-stack": {
+    "trick": "Send operands directly to output. Hold operators on a stack, popping higher precedence first; '^' is right-associative.",
+    "time": "O(n)",
+    "space": "O(n)",
+    "code": "#include <cctype>\n#include <stack>\n#include <stdexcept>\n#include <string>\nusing namespace std;\nint precedence(char op) {\n    if (op == '^') return 3;\n    if (op == '*' || op == '/') return 2;\n    if (op == '+' || op == '-') return 1;\n    return -1;\n}\nstring infixToPostfix(const string& expr) {\n    stack<char> ops;\n    string output;\n    for (char ch : expr) {\n        if (isspace((unsigned char)ch)) continue;\n        if (isalnum((unsigned char)ch)) output += ch;\n        else if (ch == '(') ops.push(ch);\n        else if (ch == ')') {\n            while (!ops.empty() && ops.top() != '(') {\n                output += ops.top(); ops.pop();\n            }\n            if (ops.empty()) throw invalid_argument(\"unmatched ')'\");\n            ops.pop();\n        } else if (precedence(ch) >= 0) {\n            while (!ops.empty() && ops.top() != '(' &&\n                   (precedence(ops.top()) > precedence(ch) ||\n                   (precedence(ops.top()) == precedence(ch) && ch != '^'))) {\n                output += ops.top(); ops.pop();\n            }\n            ops.push(ch);\n        } else throw invalid_argument(\"unsupported character\");\n    }\n    while (!ops.empty()) {\n        if (ops.top() == '(') throw invalid_argument(\"unmatched '('\");\n        output += ops.top(); ops.pop();\n    }\n    return output; // single-character operands, binary operators\n}"
+  },
+  "s9-prefix-to-infix-conversion": {
+    "trick": "Scan prefix right to left. Push operands; for an operator, pop left then right and wrap their infix form in parentheses.",
+    "time": "O(n²) due to string concatenation",
+    "space": "O(n²) for intermediate strings",
+    "code": "#include <cctype>\n#include <stack>\n#include <stdexcept>\n#include <string>\nusing namespace std;\nstring prefixToInfix(const string& prefix) {\n    stack<string> parts;\n    for (int i = (int)prefix.size() - 1; i >= 0; --i) {\n        char ch = prefix[i];\n        if (isspace((unsigned char)ch)) continue;\n        if (isalnum((unsigned char)ch)) parts.push(string(1, ch));\n        else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '^') {\n            if (parts.size() < 2) throw invalid_argument(\"invalid prefix\");\n            string left = parts.top(); parts.pop();\n            string right = parts.top(); parts.pop();\n            parts.push(\"(\" + left + ch + right + \")\");\n        } else throw invalid_argument(\"unsupported character\");\n    }\n    if (parts.size() != 1) throw invalid_argument(\"invalid prefix\");\n    return parts.top();\n}"
+  },
+  "s9-prefix-to-postfix-conversion": {
+    "trick": "Scan prefix right to left. For each operator, pop its left and right expressions, then append the operator after both.",
+    "time": "O(n²) due to string concatenation",
+    "space": "O(n²) for intermediate strings",
+    "code": "#include <cctype>\n#include <stack>\n#include <stdexcept>\n#include <string>\nusing namespace std;\nstring prefixToPostfix(const string& prefix) {\n    stack<string> parts;\n    for (int i = (int)prefix.size() - 1; i >= 0; --i) {\n        char ch = prefix[i];\n        if (isspace((unsigned char)ch)) continue;\n        if (isalnum((unsigned char)ch)) parts.push(string(1, ch));\n        else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '^') {\n            if (parts.size() < 2) throw invalid_argument(\"invalid prefix\");\n            string left = parts.top(); parts.pop();\n            string right = parts.top(); parts.pop();\n            parts.push(left + right + ch);\n        } else throw invalid_argument(\"unsupported character\");\n    }\n    if (parts.size() != 1) throw invalid_argument(\"invalid prefix\");\n    return parts.top();\n}"
+  },
+  "s9-postfix-to-prefix-conversion": {
+    "trick": "Scan postfix left to right. For an operator, pop right then left, and place the operator before them.",
+    "time": "O(n²) due to string concatenation",
+    "space": "O(n²) for intermediate strings",
+    "code": "#include <cctype>\n#include <stack>\n#include <stdexcept>\n#include <string>\nusing namespace std;\nstring postfixToPrefix(const string& postfix) {\n    stack<string> parts;\n    for (char ch : postfix) {\n        if (isspace((unsigned char)ch)) continue;\n        if (isalnum((unsigned char)ch)) parts.push(string(1, ch));\n        else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '^') {\n            if (parts.size() < 2) throw invalid_argument(\"invalid postfix\");\n            string right = parts.top(); parts.pop();\n            string left = parts.top(); parts.pop();\n            parts.push(ch + left + right);\n        } else throw invalid_argument(\"unsupported character\");\n    }\n    if (parts.size() != 1) throw invalid_argument(\"invalid postfix\");\n    return parts.top();\n}"
+  },
+  "s9-postfix-to-infix": {
+    "trick": "Scan postfix left to right. For an operator, pop right then left and combine them as a parenthesized infix expression.",
+    "time": "O(n²) due to string concatenation",
+    "space": "O(n²) for intermediate strings",
+    "code": "#include <cctype>\n#include <stack>\n#include <stdexcept>\n#include <string>\nusing namespace std;\nstring postfixToInfix(const string& postfix) {\n    stack<string> parts;\n    for (char ch : postfix) {\n        if (isspace((unsigned char)ch)) continue;\n        if (isalnum((unsigned char)ch)) parts.push(string(1, ch));\n        else if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '^') {\n            if (parts.size() < 2) throw invalid_argument(\"invalid postfix\");\n            string right = parts.top(); parts.pop();\n            string left = parts.top(); parts.pop();\n            parts.push(\"(\" + left + ch + right + \")\");\n        } else throw invalid_argument(\"unsupported character\");\n    }\n    if (parts.size() != 1) throw invalid_argument(\"invalid postfix\");\n    return parts.top();\n}"
+  },
+  "s9-convert-infix-to-prefix-notation": {
+    "trick": "Use operator and expression stacks. Apply higher-precedence operators first, building operator+left+right; keep '^' right-associative.",
+    "time": "O(n²) due to string concatenation",
+    "space": "O(n²) for intermediate strings",
+    "code": "#include <cctype>\n#include <stack>\n#include <stdexcept>\n#include <string>\nusing namespace std;\nint priority(char op) {\n    if (op == '^') return 3;\n    if (op == '*' || op == '/') return 2;\n    if (op == '+' || op == '-') return 1;\n    return -1;\n}\nvoid applyTop(stack<char>& ops, stack<string>& values) {\n    if (values.size() < 2) throw invalid_argument(\"invalid infix\");\n    char op = ops.top(); ops.pop();\n    string right = values.top(); values.pop();\n    string left = values.top(); values.pop();\n    values.push(op + left + right);\n}\nstring infixToPrefix(const string& expr) {\n    stack<char> ops;\n    stack<string> values;\n    for (char ch : expr) {\n        if (isspace((unsigned char)ch)) continue;\n        if (isalnum((unsigned char)ch)) values.push(string(1, ch));\n        else if (ch == '(') ops.push(ch);\n        else if (ch == ')') {\n            while (!ops.empty() && ops.top() != '(') applyTop(ops, values);\n            if (ops.empty()) throw invalid_argument(\"unmatched ')'\");\n            ops.pop();\n        } else if (priority(ch) >= 0) {\n            while (!ops.empty() && ops.top() != '(' &&\n                   (priority(ops.top()) > priority(ch) ||\n                   (priority(ops.top()) == priority(ch) && ch != '^')))\n                applyTop(ops, values);\n            ops.push(ch);\n        } else throw invalid_argument(\"unsupported character\");\n    }\n    while (!ops.empty()) {\n        if (ops.top() == '(') throw invalid_argument(\"unmatched '('\");\n        applyTop(ops, values);\n    }\n    if (values.size() != 1) throw invalid_argument(\"invalid infix\");\n    return values.top(); // single-character operands, binary operators\n}"
+  },
+  "s9-next-greater-element": {
+    "trick": "Scan from right to left with a decreasing stack. Remove values no greater than the current one; the remaining top is its next greater value.",
+    "time": "O(n)",
+    "space": "O(n)",
+    "code": "#include <vector>\nusing namespace std;\nvector<int> nextGreater(const vector<int>& a) {\n    int n = (int)a.size();\n    vector<int> answer(n, -1), stack;\n    for (int i = n - 1; i >= 0; --i) {\n        while (!stack.empty() && stack.back() <= a[i]) stack.pop_back();\n        if (!stack.empty()) answer[i] = stack.back();\n        stack.push_back(a[i]);\n    }\n    return answer;\n}"
+  },
+  "s9-next-greater-element-2": {
+    "trick": "For a circular array, scan indices 2n-1 down to 0 and index modulo n. The second pass supplies candidates beyond the physical end.",
+    "time": "O(n)",
+    "space": "O(n)",
+    "code": "#include <vector>\nusing namespace std;\nvector<int> nextGreaterCircular(const vector<int>& a) {\n    int n = (int)a.size();\n    vector<int> answer(n, -1), stack;\n    if (n == 0) return answer;\n    for (int i = 2 * n - 1; i >= 0; --i) {\n        int value = a[i % n];\n        while (!stack.empty() && stack.back() <= value) stack.pop_back();\n        if (i < n && !stack.empty()) answer[i] = stack.back();\n        stack.push_back(value);\n    }\n    return answer;\n}"
+  },
+  "s9-next-smaller-element": {
+    "trick": "Scan from right to left with an increasing stack. Remove values at least as large as the current one.",
+    "time": "O(n)",
+    "space": "O(n)",
+    "code": "#include <vector>\nusing namespace std;\nvector<int> nextSmaller(const vector<int>& a) {\n    int n = (int)a.size();\n    vector<int> answer(n, -1), stack;\n    for (int i = n - 1; i >= 0; --i) {\n        while (!stack.empty() && stack.back() >= a[i]) stack.pop_back();\n        if (!stack.empty()) answer[i] = stack.back();\n        stack.push_back(a[i]);\n    }\n    return answer;\n}"
+  },
+  "s9-number-of-nges-to-the-right": {
+    "trick": "Scan the array from right to left. A Fenwick tree counts values already seen; subtract the count of values <= a[i] to get greater values to the right.",
+    "time": "O(n log n + q), q queries",
+    "space": "O(n + q)",
+    "code": "#include <algorithm>\n#include <vector>\nusing namespace std;\nstruct Fenwick {\n    vector<int> bit;\n    explicit Fenwick(int n) : bit(n + 1, 0) {}\n    void add(int index) {\n        for (; index < (int)bit.size(); index += index & -index)\n            ++bit[index];\n    }\n    int prefix(int index) const {\n        int count = 0;\n        for (; index > 0; index -= index & -index)\n            count += bit[index];\n        return count;\n    }\n};\nvector<int> countGreaterToRight(const vector<int>& a,\n                                const vector<int>& queries) {\n    vector<int> sorted = a;\n    sort(sorted.begin(), sorted.end());\n    sorted.erase(unique(sorted.begin(), sorted.end()), sorted.end());\n    Fenwick seen((int)sorted.size());\n    vector<int> count(a.size());\n    for (int i = (int)a.size() - 1; i >= 0; --i) {\n        int rank = (int)(lower_bound(sorted.begin(), sorted.end(), a[i])\n                         - sorted.begin()) + 1;\n        count[i] = (int)a.size() - 1 - i - seen.prefix(rank);\n        seen.add(rank);\n    }\n    vector<int> answer;\n    for (int index : queries)\n        answer.push_back(index >= 0 && index < (int)a.size() ? count[index] : 0);\n    return answer;\n}"
+  },
+  "s9-trapping-rainwater": {
+    "trick": "The lower of the two boundary heights limits water on its side. Move that pointer inward, tracking its best boundary.",
+    "time": "O(n)",
+    "space": "O(1)",
+    "code": "#include <algorithm>\n#include <vector>\nusing namespace std;\nlong long trapWater(const vector<int>& height) {\n    int left = 0, right = (int)height.size() - 1;\n    int leftMax = 0, rightMax = 0;\n    long long water = 0;\n    while (left <= right) {\n        if (height[left] <= height[right]) {\n            leftMax = max(leftMax, height[left]);\n            water += leftMax - height[left];\n            ++left;\n        } else {\n            rightMax = max(rightMax, height[right]);\n            water += rightMax - height[right];\n            --right;\n        }\n    }\n    return water;\n}"
+  },
+  "s9-sum-of-subarray-minimum": {
+    "trick": "For each element, count subarrays where it is the chosen minimum. A monotonic stack finds the previous strictly smaller and next smaller-or-equal boundaries.",
+    "time": "O(n)",
+    "space": "O(n)",
+    "code": "#include <vector>\nusing namespace std;\nint sumSubarrayMins(const vector<int>& a) {\n    const long long MOD = 1000000007;\n    int n = (int)a.size();\n    vector<int> stack;\n    long long answer = 0;\n    for (int right = 0; right <= n; ++right) {\n        while (!stack.empty() && (right == n || a[stack.back()] >= a[right])) {\n            int mid = stack.back();\n            stack.pop_back();\n            int left = stack.empty() ? -1 : stack.back();\n            long long ways = 1LL * (mid - left) * (right - mid);\n            answer = (answer + ways % MOD * a[mid]) % MOD;\n        }\n        stack.push_back(right);\n    }\n    return (int)((answer + MOD) % MOD);\n}"
+  },
+  "s9-asteroid-collision": {
+    "trick": "A collision is possible only when a right-moving survivor meets a new left-moving asteroid. Resolve larger magnitudes until one side survives.",
+    "time": "O(n)",
+    "space": "O(n)",
+    "code": "#include <vector>\nusing namespace std;\nvector<int> asteroidCollision(const vector<int>& asteroids) {\n    vector<int> survivors;\n    for (int x : asteroids) {\n        bool alive = true;\n        while (alive && x < 0 && !survivors.empty() && survivors.back() > 0) {\n            long long right = survivors.back();\n            long long left = -(long long)x;\n            if (right < left) survivors.pop_back();\n            else {\n                if (right == left) survivors.pop_back();\n                alive = false;\n            }\n        }\n        if (alive) survivors.push_back(x);\n    }\n    return survivors;\n}"
+  },
+  "s9-sum-of-subarray-ranges": {
+    "trick": "Compute each element's contribution as a subarray maximum and as a minimum, using monotonic stacks; subtract the two sums.",
+    "time": "O(n)",
+    "space": "O(n)",
+    "code": "#include <vector>\nusing namespace std;\nlong long contributionSum(const vector<int>& a, bool maximum) {\n    int n = (int)a.size();\n    vector<int> stack;\n    long long total = 0;\n    for (int right = 0; right <= n; ++right) {\n        while (!stack.empty() &&\n               (right == n || (maximum ? a[stack.back()] <= a[right]\n                                       : a[stack.back()] >= a[right]))) {\n            int mid = stack.back();\n            stack.pop_back();\n            int left = stack.empty() ? -1 : stack.back();\n            total += 1LL * a[mid] * (mid - left) * (right - mid);\n        }\n        stack.push_back(right);\n    }\n    return total;\n}\nlong long subarrayRanges(const vector<int>& a) {\n    return contributionSum(a, true) - contributionSum(a, false);\n}"
+  },
+  "s9-remove-k-digits": {
+    "trick": "Maintain a nondecreasing digit stack. When a smaller digit arrives, remove larger preceding digits while removals remain; strip leading zeroes at the end.",
+    "time": "O(n)",
+    "space": "O(n)",
+    "code": "#include <string>\nusing namespace std;\nstring removeKdigits(const string& digits, int k) {\n    string kept;\n    for (char digit : digits) {\n        while (k > 0 && !kept.empty() && kept.back() > digit) {\n            kept.pop_back();\n            --k;\n        }\n        kept.push_back(digit);\n    }\n    while (k > 0 && !kept.empty()) { kept.pop_back(); --k; }\n    int first = 0;\n    while (first < (int)kept.size() && kept[first] == '0') ++first;\n    return first == (int)kept.size() ? \"0\" : kept.substr(first);\n}"
+  },
+  "s9-largest-rectangle-in-a-histogram": {
+    "trick": "Keep increasing bar indices. When a shorter bar appears, pop taller bars and use the new top as each popped bar's left boundary.",
+    "time": "O(n)",
+    "space": "O(n)",
+    "code": "#include <algorithm>\n#include <vector>\nusing namespace std;\nlong long largestRectangle(const vector<int>& height) {\n    int n = (int)height.size();\n    vector<int> stack;\n    long long best = 0;\n    for (int right = 0; right <= n; ++right) {\n        while (!stack.empty() && (right == n || height[stack.back()] >= height[right])) {\n            int mid = stack.back();\n            stack.pop_back();\n            int left = stack.empty() ? -1 : stack.back();\n            best = max(best, 1LL * height[mid] * (right - left - 1));\n        }\n        stack.push_back(right);\n    }\n    return best;\n}"
+  },
+  "s9-maximal-rectangles": {
+    "trick": "Treat each row as the base of a histogram of consecutive 1s above it. The largest histogram rectangle over all rows is the answer.",
+    "time": "O(R · C)",
+    "space": "O(C)",
+    "code": "#include <algorithm>\n#include <vector>\nusing namespace std;\nlong long histogramArea(const vector<int>& height) {\n    vector<int> stack;\n    long long best = 0;\n    for (int right = 0; right <= (int)height.size(); ++right) {\n        while (!stack.empty() &&\n               (right == (int)height.size() || height[stack.back()] >= height[right])) {\n            int mid = stack.back();\n            stack.pop_back();\n            int left = stack.empty() ? -1 : stack.back();\n            best = max(best, 1LL * height[mid] * (right - left - 1));\n        }\n        stack.push_back(right);\n    }\n    return best;\n}\nlong long maximalRectangle(const vector<vector<char>>& matrix) {\n    if (matrix.empty()) return 0;\n    vector<int> height(matrix[0].size(), 0);\n    long long best = 0;\n    for (const auto& row : matrix) {\n        for (int c = 0; c < (int)row.size(); ++c)\n            height[c] = row[c] == '1' ? height[c] + 1 : 0;\n        best = max(best, histogramArea(height));\n    }\n    return best;\n}"
+  },
+  "s9-sliding-window-maximum": {
+    "trick": "Keep indices in a deque with decreasing values. Drop indices outside the window; the front is its maximum.",
+    "time": "O(n)",
+    "space": "O(k)",
+    "code": "#include <deque>\n#include <vector>\nusing namespace std;\nvector<int> maxSlidingWindow(const vector<int>& a, int k) {\n    vector<int> answer;\n    if (k <= 0 || k > (int)a.size()) return answer;\n    deque<int> dq;\n    for (int i = 0; i < (int)a.size(); ++i) {\n        while (!dq.empty() && dq.front() <= i - k) dq.pop_front();\n        while (!dq.empty() && a[dq.back()] <= a[i]) dq.pop_back();\n        dq.push_back(i);\n        if (i >= k - 1) answer.push_back(a[dq.front()]);\n    }\n    return answer;\n}"
+  },
+  "s9-stock-span-problem": {
+    "trick": "Collapse earlier prices no greater than today's price. Each stack item stores its price and the span it already represents.",
+    "time": "O(1) amortized per price",
+    "space": "O(n)",
+    "code": "#include <stack>\n#include <utility>\nusing namespace std;\nclass StockSpanner {\n    stack<pair<int,int>> previous;\npublic:\n    int next(int price) {\n        int span = 1;\n        while (!previous.empty() && previous.top().first <= price) {\n            span += previous.top().second;\n            previous.pop();\n        }\n        previous.push({price, span});\n        return span;\n    }\n};"
+  },
+  "s9-the-celebrity-problem": {
+    "trick": "Eliminate one of each pair: if A knows B, A cannot be the celebrity; otherwise B cannot. Verify the one remaining candidate.",
+    "time": "O(n)",
+    "space": "O(1)",
+    "code": "#include <vector>\nusing namespace std;\nint celebrity(const vector<vector<int>>& knows) {\n    int n = (int)knows.size();\n    if (n == 0) return -1;\n    int candidate = 0;\n    for (int other = 1; other < n; ++other)\n        if (knows[candidate][other]) candidate = other;\n    for (int person = 0; person < n; ++person) {\n        if (person == candidate) continue;\n        if (knows[candidate][person] || !knows[person][candidate])\n            return -1;\n    }\n    return candidate;\n}"
+  },
+  "s9-lru-cache-important": {
+    "trick": "Use a doubly linked list for recency order and a hash map from key to list iterator. Move accessed keys to the front; evict from the back.",
+    "time": "O(1) average get/put",
+    "space": "O(capacity)",
+    "code": "#include <list>\n#include <unordered_map>\n#include <utility>\nusing namespace std;\nclass LRUCache {\n    int capacity;\n    list<pair<int,int>> recent; // front = most recently used\n    unordered_map<int, list<pair<int,int>>::iterator> where;\npublic:\n    explicit LRUCache(int capacity) : capacity(capacity) {}\n    int get(int key) {\n        auto it = where.find(key);\n        if (it == where.end()) return -1;\n        recent.splice(recent.begin(), recent, it->second);\n        return it->second->second;\n    }\n    void put(int key, int value) {\n        if (capacity <= 0) return;\n        auto it = where.find(key);\n        if (it != where.end()) {\n            it->second->second = value;\n            recent.splice(recent.begin(), recent, it->second);\n            return;\n        }\n        if ((int)recent.size() == capacity) {\n            where.erase(recent.back().first);\n            recent.pop_back();\n        }\n        recent.push_front({key, value});\n        where[key] = recent.begin();\n    }\n};"
+  },
+  "s9-lfu-cache": {
+    "trick": "Map keys to value/frequency and their position in a frequency list. Evict the least recently used key from the lowest-frequency list.",
+    "time": "O(1) average get/put",
+    "space": "O(capacity)",
+    "code": "#include <list>\n#include <unordered_map>\nusing namespace std;\nclass LFUCache {\n    struct Entry { int value, frequency; list<int>::iterator position; };\n    int capacity, minimumFrequency = 0;\n    unordered_map<int, Entry> items;\n    unordered_map<int, list<int>> byFrequency; // front = most recent\n    void touch(int key) {\n        Entry& entry = items.at(key);\n        int old = entry.frequency;\n        byFrequency[old].erase(entry.position);\n        if (byFrequency[old].empty()) {\n            byFrequency.erase(old);\n            if (minimumFrequency == old) ++minimumFrequency;\n        }\n        ++entry.frequency;\n        byFrequency[entry.frequency].push_front(key);\n        entry.position = byFrequency[entry.frequency].begin();\n    }\npublic:\n    explicit LFUCache(int capacity) : capacity(capacity) {}\n    int get(int key) {\n        auto it = items.find(key);\n        if (it == items.end()) return -1;\n        int value = it->second.value;\n        touch(key);\n        return value;\n    }\n    void put(int key, int value) {\n        if (capacity <= 0) return;\n        auto it = items.find(key);\n        if (it != items.end()) {\n            it->second.value = value;\n            touch(key);\n            return;\n        }\n        if ((int)items.size() == capacity) {\n            int evicted = byFrequency[minimumFrequency].back();\n            byFrequency[minimumFrequency].pop_back();\n            if (byFrequency[minimumFrequency].empty())\n                byFrequency.erase(minimumFrequency);\n            items.erase(evicted);\n        }\n        minimumFrequency = 1;\n        byFrequency[1].push_front(key);\n        items[key] = {value, 1, byFrequency[1].begin()};\n    }\n};"
+  }
+}
