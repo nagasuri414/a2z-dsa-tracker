@@ -115,22 +115,6 @@
   .chip b{font-weight:600}
   .chip span{color:var(--muted)}
 
-  /* ---- collapsible report panels ---- */
-  .panel{margin:0}
-  .panel > summary{display:flex;align-items:center;gap:11px;cursor:pointer;list-style:none;
-    user-select:none;padding:2px 0}
-  .panel > summary::-webkit-details-marker{display:none}
-  .panel > summary:hover .p-title{color:var(--accent)}
-  .p-title{font-weight:600;font-size:13px;letter-spacing:-.005em;transition:color .14s}
-  .p-meta{margin-left:auto;color:var(--muted);font-size:12px;text-align:right;
-    font-variant-numeric:tabular-nums;white-space:nowrap}
-  .p-body{padding-top:13px}
-  .panel.sub{border-top:1px solid var(--line-soft);margin-top:16px;padding-top:13px}
-  .panel.report > summary{align-items:flex-start;padding:0}
-  .panel.report > summary .chev{margin-top:5px}
-  .panel.report > summary .goal-title{flex:1;min-width:0}
-  @media(max-width:560px){ .p-meta{display:none} }
-
   /* ---- goal and pace ---- */
   .goal{background:var(--surface);border:1px solid var(--line);border-top:4px solid #14ad98;border-radius:var(--r);
     padding:18px 20px;margin-bottom:12px;box-shadow:var(--shadow)}
@@ -143,17 +127,20 @@
     font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
   .goal-form input{width:150px;text-transform:none;letter-spacing:normal}
   .goal-form input[type=number]{width:110px}
-  .goal-kpis{display:grid;grid-template-columns:repeat(5,minmax(112px,1fr));gap:8px;margin-top:15px}
+  .report-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .report-head .goal-title{flex:1}
+  .report-note{margin-top:12px;padding:9px 12px;border-radius:var(--r-sm);
+    background:color-mix(in srgb,#fbbf24 10%,var(--surface));color:var(--muted);font-size:12px;line-height:1.45}
+  .report-section{margin-top:19px;border-top:1px solid var(--line-soft);padding-top:16px}
+  .report-section h3{font-size:13px;margin:0;font-weight:650}
+  .report-section p{font-size:12px;color:var(--muted);margin:4px 0 0;line-height:1.5}
+  .goal-kpis{display:grid;grid-template-columns:repeat(4,minmax(112px,1fr));gap:8px;margin-top:15px}
   .goal-kpi{background:var(--surface-2);border:1px solid var(--line-soft);border-radius:var(--r-sm);padding:10px 12px}
   .goal-kpi:nth-child(2){background:color-mix(in srgb,#fbbf24 11%,var(--surface))}
   .goal-kpi:nth-child(3){background:color-mix(in srgb,#2cc7bb 11%,var(--surface))}
   .goal-kpi span{display:block;color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em}
   .goal-kpi b{display:block;font-size:17px;margin-top:2px;font-weight:650}
   .goal-kpi small{display:block;color:var(--faint);font-size:10.5px;margin-top:1px}
-  .goal-action{color:var(--accent)}
-  .goal-kpi.met{border-color:color-mix(in srgb,var(--easy) 45%,transparent)}
-  .goal-kpi.met b{color:var(--easy)}
-  .goal-kpi.met .goal-action{color:var(--easy)}
   .goal-chart{margin-top:14px;background:var(--surface-2);border:1px solid var(--line-soft);
     border-radius:var(--r-sm);padding:10px 12px 5px;overflow:hidden}
   .goal-chart svg{display:block;width:100%;height:150px}
@@ -162,16 +149,20 @@
   .goal-chart .actual{stroke:var(--accent);stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
   .goal-chart circle{fill:var(--accent)}
   .goal-chart text{fill:var(--muted);font-size:10px;font-family:inherit}
-  .range-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:12px;
-    color:var(--muted);font-size:12.5px}
-  .range-row b{color:var(--text);font-weight:600}
-  .range-row select{padding:5px 9px;font-size:12px}
-  .activity{margin-top:14px;border-top:1px solid var(--line-soft);padding-top:14px}
-  .activity-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
-  .activity-head h3{font-size:13px;margin:0;font-weight:650}
-  .activity-head span{font-size:12px;color:var(--muted)}
-  .activity-quick{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-  .activity-quick .goal-kpi{min-width:125px;flex:1}
+  .chart-legend{display:flex;gap:15px;flex-wrap:wrap;margin-top:9px;color:var(--muted);font-size:11px}
+  .chart-legend i{display:inline-block;width:17px;border-top:3px solid var(--accent);vertical-align:middle;margin-right:5px}
+  .chart-legend .target-key{border-color:var(--faint);border-top-style:dashed}
+  .pace-line{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
+  .pace-line b{color:var(--text)}
+  .activity{margin-top:0}
+  .daily-bars{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:5px;
+    height:114px;margin:12px 0 15px;padding:7px 4px 0;border-bottom:1px solid var(--line-soft)}
+  .daily-bar{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-width:0}
+  .daily-bar .bar-count{font-size:10px;color:var(--muted);height:15px}
+  .daily-bar .bar-fill{display:block;width:min(100%,24px);border-radius:4px 4px 0 0;
+    background:var(--accent);min-height:2px}
+  .daily-bar .bar-fill.empty{background:var(--line)}
+  .daily-bar small{font-size:10px;color:var(--muted);height:17px;margin-top:4px}
   .heatmap-wrap{overflow-x:auto;padding:3px 0 8px}
   .heatmap{display:grid;grid-template-rows:repeat(7,12px);grid-auto-flow:column;
     grid-auto-columns:12px;gap:3px;width:max-content;min-width:100%}
@@ -592,7 +583,7 @@ const ICON = {
 };
 
 /* ---------------- state ---------------- */
-let state = load(), fileHandle = null, fileName = "", writeTimer = null, rangeDays = 30,
+let state = load(), fileHandle = null, fileName = "", writeTimer = null,
     goalEditing = false, activityDate = "";
 
 function blank(){
@@ -1017,10 +1008,19 @@ function burnChart(goal, done, times){
 function activityPanel(times){
   const now=Date.now(); if(!activityDate) activityDate=dateOnly(now);
   const counts={}; times.forEach(t=>{const d=dateOnly(t);counts[d]=(counts[d]||0)+1;});
-  const yd=new Date(); yd.setDate(yd.getDate()-1); const yesterday=dateOnly(yd), today=dateOnly(now);
+  const today=dateOnly(now);
   const selected=counts[activityDate]||0, through=times.filter(t=>dateOnly(t)<=activityDate).length;
   const names=DATA.filter(p=>{const s=state.items[p.k]||{};return s.done&&s.doneAt&&+s.doneAt<=now&&dateOnly(+s.doneAt)===activityDate;})
     .map(p=>p.n);
+  const recentDays=Array.from({length:14},(_,i)=>{
+    const day=new Date(now); day.setDate(day.getDate()+i-13);
+    return {date:dateOnly(day), count:counts[dateOnly(day)]||0, label:day.getDate()};
+  });
+  const max=Math.max(1,...recentDays.map(d=>d.count));
+  const bars=recentDays.map((d,i)=>`<div class="daily-bar" title="${esc(d.date)}: ${d.count} solved">
+    <span class="bar-count">${d.count||""}</span>
+    <span class="bar-fill${d.count?"":" empty"}" style="height:${d.count?Math.max(5,Math.round(d.count/max*65)):2}px"></span>
+    <small>${i%2===0||i===13?d.label:""}</small></div>`).join("");
   const start=new Date(monday(now)); start.setDate(start.getDate()-25*7);
   const cells=Array.from({length:26*7},(_,i)=>{
     const day=new Date(start); day.setDate(day.getDate()+i);
@@ -1028,105 +1028,66 @@ function activityPanel(times){
     return `<button class="heat${level?` l${level}`:""}${d===activityDate?" selected":""}" data-day="${d}"
       title="${esc(prettyDate(ts))}: ${n} solved" aria-label="${esc(prettyDate(ts))}: ${n} solved"></button>`;
   }).join("");
-  const meta = `${counts[today]||0} today · ${times.length} dated`;
-  return panel("activity", "Daily activity", meta, `<div class="activity">
-    <div class="activity-head"><span>Last 26 weeks · darker squares mean more solved</span></div>
-    <div class="activity-quick">
-      <div class="goal-kpi"><span>Today</span><b>${counts[today]||0}</b><small>problems solved</small></div>
-      <div class="goal-kpi"><span>Yesterday</span><b>${counts[yesterday]||0}</b><small>problems solved</small></div>
-      <div class="goal-kpi"><span>Dated history</span><b>${times.length}</b><small>excludes older undated solves</small></div>
-    </div>
+  return `<section class="report-section activity" aria-label="Daily activity">
+    <h3>Daily activity</h3>
+    <p>Problems completed on each of the last 14 days. Today: ${counts[today]||0}.</p>
+    <div class="daily-bars" role="img" aria-label="Daily solved counts for the last 14 days">${bars}</div>
+    <p>Calendar · last 26 weeks · darker squares mean more solved</p>
     <div class="heatmap-wrap"><div class="heatmap">${cells}</div></div>
     <div class="day-detail"><input type="date" id="activityDate" value="${activityDate}">
       <div class="day-summary"><b>${selected}</b> solved on ${esc(prettyDate(activityDate+"T12:00:00"))} ·
         <b>${through}</b> dated solves through that date
         <div class="day-problems">${names.length?esc(names.join(" · ")):"No recorded completions on this date."}</div>
-      </div></div></div>`, "sub");
+      </div></div></section>`;
 }
 function bindActivity(){
   const input=document.getElementById("activityDate");
   if(input) input.onchange=e=>{activityDate=e.target.value||dateOnly(Date.now());renderGoal();};
   document.querySelectorAll("[data-day]").forEach(b=>b.onclick=()=>{activityDate=b.dataset.day;renderGoal();});
 }
-/* report sections remember whether they are open; renderGoal() rebuilds its own
-   markup on every interaction, so the state has to live outside the DOM */
-const PANELS = KEY + "-panels";
-let panelOpen = (() => { try{ return JSON.parse(ls.get(PANELS)) || {}; }catch(e){ return {}; } })();
-function panel(id, title, meta, body, cls){
-  const open = panelOpen[id] !== false;
-  return `<details class="panel ${cls || ""}" data-panel="${esc(id)}"${open ? " open" : ""}>
-    <summary><svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-      <span class="p-title">${esc(title)}</span><span class="p-meta">${meta}</span></summary>
-    <div class="p-body">${body}</div></details>`;
-}
-function bindPanels(){
-  document.querySelectorAll("details.panel").forEach(d => {
-    d.addEventListener("toggle", () => {
-      panelOpen[d.dataset.panel] = d.open;
-      ls.set(PANELS, JSON.stringify(panelOpen));
-    });
-  });
-}
-
 function renderGoal(){
   const el=document.getElementById("goal"); if(!el) return;
   const goal=state.goal, now=Date.now(), times=solvedTimes(), done=solvedCount();
-  if(!goal){
-    el.innerHTML=`<div class="goal-head"><div class="goal-title"><h2>Set a finish target</h2>
-      <p>Add a date to see the weekly pace you need, your projected finish, and progress over time.</p></div></div>${goalForm(null)}${activityPanel(times)}`;
-    bindGoalForm(null); bindActivity(); bindPanels(); return;
+  const today=calendarDay(now), todayCount=countDays(times,today,today),
+        yesterdayCount=countDays(times,today-1,today-1),
+        week=countDays(times,calendarDay(monday(now)),today),
+        month=countDays(times,calendarDay(monthStart(now)),today),
+        undated=DATA.filter(p=>{const s=state.items[p.k]||{};return s.done&&(!Number.isFinite(+s.doneAt)||+s.doneAt<=0||+s.doneAt>now)}).length;
+  let todayHint="Recorded today", goalSection="", goalIntro="Set a goal to compare your progress with a target.";
+  if(goal){
+    const target=+new Date(goal.targetDate+"T23:59:59"), remaining=Math.max(0,goal.targetTotal-done),
+          days=Math.max(calendarDay(target)-today+1,0), pace=recentPace(times,now),
+          needed=remaining===0?0:(days>0?remaining/days:Infinity),
+          projected=pace.days>=7 && pace.rate>0 ? addCalendarDays(now,Math.ceil(remaining/pace.rate)) : null,
+          todayTarget=remaining===0||!Number.isFinite(needed)?0:Math.max(1,Math.ceil(needed));
+    todayHint=todayTarget?`Suggested target: ${todayTarget}`:"Recorded today";
+    goalIntro=`${done} / ${goal.targetTotal} solved toward ${esc(prettyDate(target))} · ${remaining} remaining · ${days} day${days===1?"":"s"} left`;
+    goalSection=`<section class="report-section" aria-label="Goal progress">
+      <h3>Progress toward your goal</h3>
+      <p>The solid line is your recorded progress; the dashed line is the path to your target.</p>
+      ${burnChart(goal,done,times)}
+      <div class="chart-legend"><span><i></i>Recorded progress</span><span><i class="target-key"></i>Target path</span></div>
+      <div class="pace-line">Needed: <b>${Number.isFinite(needed)?rateText(needed)+" / day":"target date passed"}</b>
+        · Recent: <b>${pace.days?rateText(pace.rate)+" / day":"no dated history"}</b>
+        · Projected finish: <b>${remaining===0?"Goal reached":projected?esc(prettyDate(projected)):pace.days<7?"not enough history yet":"no recent dated solves"}</b></div>
+    </section>`;
   }
-  if(goalEditing){
-    el.innerHTML=`<div class="goal-head"><div class="goal-title"><h2>Adjust your goal</h2>
-      <p>Changing a target is planning, not failure. Your recorded history stays untouched.</p></div></div>${goalForm(goal)}`;
-    bindGoalForm(goal); return;
-  }
-  const target=+new Date(goal.targetDate+"T23:59:59"), remaining=Math.max(0,goal.targetTotal-done),
-        today=calendarDay(now), days=Math.max(calendarDay(target)-today+1,0),
-        pace=recentPace(times,now), recent=pace.rate,
-        needed=remaining===0?0:(days>0?remaining/days:Infinity),
-        projected=pace.days>=7 && recent>0 ? addCalendarDays(now,Math.ceil(remaining/recent)) : null,
-        week=countDays(times,calendarDay(monday(now)),today), month=countDays(times,calendarDay(monthStart(now)),today),
-        current=countDays(times,today-rangeDays+1,today),
-        previous=countDays(times,today-2*rangeDays+1,today-rangeDays),
-        active=new Set(times.filter(t=>calendarDay(t)>=today-rangeDays+1).map(dateOnly)).size,
-        unknown=DATA.filter(p=>{const s=state.items[p.k]||{};return s.done&&(!Number.isFinite(+s.doneAt)||+s.doneAt<=0||+s.doneAt>now)}).length,
-        delta=current-previous, paceText=pace.days?rateText(recent)+" / day":"No dated pace yet",
-        needText=!isFinite(needed)?"Target date passed":rateText(needed)+" / day",
-        todayCount=countDays(times,today,today),
-        todayTarget=remaining===0?0:(isFinite(needed)?Math.max(1,Math.ceil(needed)):0),
-        todayLeft=Math.max(0,todayTarget-todayCount),
-        todayNote=remaining===0?"Goal reached"
-          :todayTarget===0?"Set a new target date"
-          :todayLeft===0?`Today's suggested target met${todayCount>todayTarget?` · ${todayCount-todayTarget} extra`:""}`
-          :`${todayLeft} more toward today's suggested target`,
-        projection=remaining===0?"Goal reached":projected?prettyDate(projected):pace.days<7?"Needs 7 days since first dated solve":"No recent dated solves",
-        action=remaining===0?"Complete":!isFinite(needed)?"Choose a new date":pace.days<7?"Early pace estimate":recent>=needed?"On pace":`${rateText(needed-recent)} more / day`;
-  const trend = panel("trend", "Progress over time",
-    `${esc(action)}`,
-    `${burnChart(goal,done,times)}
-     <div class="range-row"><span>Compare</span><select id="rangeDays">
-      ${[7,30,90,180].map(n=>`<option value="${n}"${rangeDays===n?" selected":""}>${n} days</option>`).join("")}
-      </select><span><b>${current}</b> solved vs <b>${previous}</b> previously · <b>${delta>=0?"+":""}${delta}</b> · ${active} active day${active===1?"":"s"}</span></div>`,
-    "sub");
-  el.innerHTML=`<details class="panel report" data-panel="report"${panelOpen.report!==false?" open":""}>
-    <summary><svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-      <div class="goal-title"><h2>${done} / ${goal.targetTotal} by ${esc(prettyDate(target))}</h2>
-      <p>${remaining} remaining · ${days} calendar day${days===1?"":"s"} left${unknown?` · ${unknown} completion${unknown===1?"":"s"} lack a usable date`:""}</p></div>
-      <button class="btn btn-quiet" id="goalEdit">Adjust goal</button></summary>
-    <div class="p-body">
+  el.innerHTML=`<div class="report-head"><div class="goal-title"><h2>Progress report</h2>
+    <p>${goalIntro}</p></div>
+    ${goal&&!goalEditing?'<button class="btn btn-quiet" id="goalEdit">Adjust goal</button>':""}</div>
+    ${!goal||goalEditing?goalForm(goal):""}
     <div class="goal-kpis">
-      <div class="goal-kpi ${todayTarget&&todayLeft===0?"met":""}"><span>Today</span><b>${todayCount}${todayTarget?` / ${todayTarget}`:""}</b><small class="goal-action">${esc(todayNote)}</small></div>
-      <div class="goal-kpi"><span>Your pace</span><b>${paceText}</b><small>${pace.days ? `${pace.days}-day observation window` : "No dated history"} (up to 28 days)</small></div>
-      <div class="goal-kpi"><span>Needed pace</span><b>${needText}</b><small class="goal-action">${action}</small></div>
-      <div class="goal-kpi"><span>Projected finish</span><b>${projection}</b><small>At your recent pace</small></div>
-      <div class="goal-kpi"><span>Recent output</span><b>${week} this week</b><small>${month} this month · ${days} day${days===1?"":"s"} left</small></div>
-    </div>${trend}${activityPanel(times)}</div></details>`;
+      <div class="goal-kpi"><span>Today</span><b>${todayCount}</b><small>${esc(todayHint)}</small></div>
+      <div class="goal-kpi"><span>Yesterday</span><b>${yesterdayCount}</b><small>Recorded yesterday</small></div>
+      <div class="goal-kpi"><span>This week</span><b>${week}</b><small>Since Monday</small></div>
+      <div class="goal-kpi"><span>This month</span><b>${month}</b><small>Since the 1st</small></div>
+    </div>
+    ${undated?`<div class="report-note">${undated} solved problem${undated===1?"":"s"} lack a usable completion date. They count toward your total, but not daily graphs. Add known dates using Download Excel → Upload Excel.</div>`:""}
+    ${goalSection}${activityPanel(times)}`;
+  if(!goal||goalEditing) bindGoalForm(goal);
   const edit=document.getElementById("goalEdit");
-  edit.onclick=e=>{ e.preventDefault(); e.stopPropagation(); goalEditing=true; renderGoal(); };
-  const rng=document.getElementById("rangeDays");
-  if(rng) rng.onchange=e=>{rangeDays=+e.target.value;renderGoal();};
-  bindActivity(); bindPanels();
+  if(edit) edit.onclick=()=>{goalEditing=true;renderGoal();};
+  bindActivity();
 }
 
 function applyFilters(){
