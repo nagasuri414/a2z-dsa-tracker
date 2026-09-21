@@ -1139,7 +1139,10 @@ function renderGoal(){
         week=countDays(times,calendarDay(monday(now)),today),
         month=countDays(times,calendarDay(monthStart(now)),today),
         undated=DATA.filter(p=>{const s=state.items[p.k]||{};return s.done&&(!Number.isFinite(+s.doneAt)||+s.doneAt<=0||+s.doneAt>now)}).length;
-  let todayHint="Recorded today", goalSection="", goalIntro="Set a goal to compare your progress with a target.";
+  let todayHint="Recorded today", goalSection="",
+      goalIntro=todayCount
+        ? `${todayCount} solved today. Set a goal to compare your progress with a target.`
+        : "Set a goal to compare your progress with a target.";
   if(goal){
     const target=+new Date(goal.targetDate+"T23:59:59"), remaining=Math.max(0,goal.targetTotal-done),
           days=Math.max(calendarDay(target)-today+1,0), pace=recentPace(times,now),
