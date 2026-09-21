@@ -390,6 +390,9 @@
       <button class="btn btn-quiet" id="theme" title="Toggle theme" aria-label="Toggle theme">
         <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 109 9 7 7 0 01-9-9z"/></svg>
       </button>
+      <button class="btn btn-quiet" id="checkUpdate" title="Reload the latest version (bypasses caching)" aria-label="Check for updates">
+        <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-3-6.7M21 4v5h-5"/></svg>
+      </button>
       <button class="btn btn-quiet" id="expand">Expand all</button>
       <div class="menu-wrap">
         <button class="btn btn-quiet" id="aiBtn" aria-haspopup="true" aria-expanded="false">
@@ -515,8 +518,8 @@
   </button>
 </div>
 
-<script src="quotes.js"></script>
-<script src="solutions.js"></script>
+<script src="quotes.js?v=1"></script>
+<script src="solutions.js?v=1790009173"></script>
 <script>
 /* "Ask AI" opens a real ChatGPT conversation for this problem via its ?q= parameter,
    verified to auto-submit an actual message rather than just prefill an empty box
@@ -602,14 +605,29 @@ const ICON = {
 };
 
 /* ---------------- state ---------------- */
+function blank(){
+  return {schema:SCHEMA, items:{}, goal:null, lastBackup:null, changes:0};
+}
+function fixGoal(g){
+  if(!g || !g.targetDate) return null;
+  return {...g,
+    targetTotal: Number(g.targetTotal) > 0 ? Number(g.targetTotal) : DATA.length,
+    createdAt: Number(g.createdAt) > 0 ? Number(g.createdAt) : Date.now(),
+    baselineDone: Number.isFinite(Number(g.baselineDone)) ? Number(g.baselineDone) : 0};
+}
+/* load() calls norm() immediately below, at state-initialization time - norm
+   has to be a real function (not just hoisted) by then, so it's defined here
+   rather than down with fixGoal's other original neighbors. A const in its
+   old spot was still in the temporal dead zone when load() ran, so norm(c)
+   threw on every load, was swallowed by load()'s own catch, and silently
+   reset saved progress to blank on every single page load. */
+const norm = s => ({schema:SCHEMA, items:s.items||{}, goal:fixGoal(s.goal),
+                   lastBackup:s.lastBackup||null, changes:s.changes||0});
 let state = load(), fileHandle = null, fileName = "", writeTimer = null,
     goalEditing = false, activityDate = "",
     reportCollapsed = ls.get(KEY + "-report-collapsed") !== "0",
     codeWrap = ls.get(KEY + "-code-wrap") === "1";
 
-function blank(){
-  return {schema:SCHEMA, items:{}, goal:null, lastBackup:null, changes:0};
-}
 function load(){
   try{ const c = JSON.parse(ls.get(KEY)); if(c && c.items) return norm(c); }catch(e){}
   try{ const o = JSON.parse(ls.get(LEGACY)); if(o && o.items) return migrate(o); }catch(e){}
@@ -711,15 +729,6 @@ function looksExternal(obj){
   return externalToItems(obj).matched >= 3;
 }
 
-function fixGoal(g){
-  if(!g || !g.targetDate) return null;
-  return {...g,
-    targetTotal: Number(g.targetTotal) > 0 ? Number(g.targetTotal) : DATA.length,
-    createdAt: Number(g.createdAt) > 0 ? Number(g.createdAt) : Date.now(),
-    baselineDone: Number.isFinite(Number(g.baselineDone)) ? Number(g.baselineDone) : 0};
-}
-const norm = s => ({schema:SCHEMA, items:s.items||{}, goal:fixGoal(s.goal),
-                   lastBackup:s.lastBackup||null, changes:s.changes||0});
 function migrate(old){
   const out = blank(); let moved = 0;
   for(const [idx, v] of Object.entries(old.items || {})){
@@ -1302,6 +1311,15 @@ document.getElementById("theme").onclick = () => {
   const el = document.documentElement;
   el.dataset.theme = el.dataset.theme === "dark" ? "light" : "dark";
   ls.set(KEY + "-theme", el.dataset.theme);
+};
+/* Your own progress never needs this - checking a box saves to this browser
+   instantly. This is only for fetching a newer deploy of the page itself:
+   GitHub Pages caches index.html/quotes.js/solutions.js for up to 10 minutes,
+   so a plain reload can keep showing an old version of the app for a while
+   after an update ships. Navigating to a cache-busted URL forces a real
+   refetch instead of waiting out that window. */
+document.getElementById("checkUpdate").onclick = () => {
+  location.href = location.pathname + "?_=" + Date.now();
 };
 { const t = ls.get(KEY + "-theme"); if(t) document.documentElement.dataset.theme = t; }
 { const saved = ls.get(KEY + "-ai-provider"); if(AI_PROVIDERS[saved]) aiProvider = saved; }
