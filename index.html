@@ -1634,7 +1634,7 @@ function sheetXml(rows, o = {}){
 function buildWorkbook(){
   const HEAD = ["#","Step","Step title","Sub-step","Sub-step title","Problem","Difficulty","Topic",
                 "Status","Date solved","Starred","Notes","LC","GFG","CN","YT","BLOG","TUF","Alt link","LC (suggested)",
-                "Sol p.","ID (do not edit)"];
+                "Trick","Time","Space","Solution code","ID (do not edit)"];
   const LINKS = ["LC","GFG","CN","YT","BLOG","TUF"];
   const S = {head:1, txt:0, num:2, mid:3, link:4, wrap:5,
              t1:6, t2:7, kpi:8, kpiBig:9, pct:10, lbl:11, hdr2:12, tot:13, totPct:14};
@@ -1664,7 +1664,10 @@ function buildWorkbook(){
       ...LINKS.map(k => link(p.l[k], k)),
       link(p.alt, p.altsrc ? altLabel(p.altsrc) : "ALT"),
       link(p.sug, "LC?"),
-      p.pg ? {t:p.pg, s:S.num} : "",
+      CODE[p.k] ? {t:CODE[p.k].trick, s:S.wrap} : "",
+      CODE[p.k] ? {t:CODE[p.k].time, s:S.mid} : "",
+      CODE[p.k] ? {t:CODE[p.k].space, s:S.mid} : "",
+      CODE[p.k] ? {t:CODE[p.k].code, s:S.wrap} : "",
       {t:p.k, s:S.lbl},
     ]);
   });
@@ -1672,7 +1675,7 @@ function buildWorkbook(){
   const cfRule = (sq, op, val, dxf, pri) =>
     `<conditionalFormatting sqref="${sq}"><cfRule type="cellIs" dxfId="${dxf}" priority="${pri}" operator="${op}"><formula>"${val}"</formula></cfRule></conditionalFormatting>`;
   const progress = sheetXml(rows, {
-    widths:[5,6,26,9,30,46,11,20,13,13,9,38,6.5,6.5,6.5,6.5,6.5,6.5,12,13,9,26],
+    widths:[5,6,26,9,30,46,11,20,13,13,9,38,6.5,6.5,6.5,6.5,6.5,6.5,12,13,40,10,10,50,26],
     freeze:true, grid:false,
     cf: cfRule(`I2:I${lastRow}`, "equal", "Done", 0, 1)
       + cfRule(`K2:K${lastRow}`, "equal", "Yes", 1, 2)
