@@ -394,6 +394,10 @@
       <button class="btn btn-quiet" id="theme" title="Toggle theme" aria-label="Toggle theme">
         <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 109 9 7 7 0 01-9-9z"/></svg>
       </button>
+      <button class="btn btn-quiet" id="howTo" title="How to use this tracker" aria-label="How to use this tracker">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 015 .5c0 1.5-2 1.7-2 3.3M12 17h.01"/></svg>
+        How to use
+      </button>
       <button class="btn btn-quiet" id="checkUpdate" title="Reload the latest version (bypasses caching)" aria-label="Check for updates">
         <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-3-6.7M21 4v5h-5"/></svg>
       </button>
@@ -523,7 +527,7 @@
 </div>
 
 <script src="quotes.js?v=1"></script>
-<script src="solutions.js?v=1790015610"></script>
+<script src="solutions.js?v=1790016982"></script>
 <script>
 /* "Ask AI" opens a real ChatGPT conversation for this problem via its ?q= parameter,
    verified to auto-submit an actual message rather than just prefill an empty box
@@ -1336,6 +1340,7 @@ document.getElementById("theme").onclick = () => {
 document.getElementById("checkUpdate").onclick = () => {
   location.href = location.pathname + "?_=" + Date.now();
 };
+document.getElementById("howTo").onclick = openHowTo;
 { const t = ls.get(KEY + "-theme"); if(t) document.documentElement.dataset.theme = t; syncHljsTheme(); }
 { const saved = ls.get(KEY + "-ai-provider"); if(AI_PROVIDERS[saved]) aiProvider = saved; }
 
@@ -1999,6 +2004,24 @@ function showModal(title, html, buttons){
   document.addEventListener("keydown", onKey);
   document.body.appendChild(scrim);
   row.querySelector(".btn-primary, .btn")?.focus();
+}
+
+function openHowTo(){
+  showModal("How to use this tracker", `
+    <p>A personal checklist for <a href="https://takeuforward.org/dsa/strivers-a2z-sheet-learn-dsa-a-to-z" target="_blank" rel="noopener noreferrer">Striver's A2Z DSA sheet</a> - 456 problems across 18 steps, with links to GFG/LeetCode/YouTube/etc, your own notes, and a quick solution for almost every problem.</p>
+    <p><b>Your progress saves in this browser only.</b> It is not synced anywhere or shared with whoever sent you this link - each person who opens it starts their own, separate progress. Click <b>Download backup</b> near the bottom of the page every so often to keep a copy, especially before clearing browser data or switching devices.</p>
+    <ul>
+      <li>Tick the checkbox to mark a problem solved; the star and note icons are next to it.</li>
+      <li>The <b>AI</b> link opens a ready-made prompt explaining that problem in ChatGPT, Claude or Gemini - pick which one from <b>Ask AI</b> in the toolbar.</li>
+      <li>The <b>&lt;/&gt;</b> icon shows a quick solution: approach, time/space complexity and C++ code, where one exists.</li>
+      <li><b>Save &amp; load</b> in the toolbar can also export/import your progress as an Excel sheet, if you'd rather track it there.</li>
+    </ul>
+    <p>Search, filters, dark mode and the progress report are worth exploring too. Come back to this anytime from the <b>How to use</b> button up top.</p>
+  `, [{label:"Got it", primary:true}]);
+}
+{
+  const seen = ls.get(KEY + "-seen-howto");
+  if(!seen){ ls.set(KEY + "-seen-howto", "1"); openHowTo(); }
 }
 
 /* ---------------- scroll rail ---------------- */
