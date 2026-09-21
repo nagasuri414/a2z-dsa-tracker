@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>A2Z DSA Tracker</title>
+<link rel="stylesheet" id="hljsTheme" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <style>
   :root{
     --bg:#f5f6ff; --surface:#ffffff; --surface-2:#f5f4ff; --raise:#ffffff;
@@ -261,6 +263,7 @@
     padding:10px 34px 10px 12px;overflow-x:auto;margin:0;
     font:12.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--text)}
   .code-note pre.wrap{white-space:pre-wrap;overflow-wrap:anywhere;overflow-x:visible}
+  .code-note pre code.hljs{background:transparent;padding:0;color:inherit}
   .wrap-toggle{position:absolute;top:8px;right:8px;width:24px;height:24px;display:flex;
     align-items:center;justify-content:center;border-radius:6px;border:1px solid var(--line);
     background:var(--surface);color:var(--faint);cursor:pointer;opacity:.8;
@@ -996,10 +999,13 @@ function toggleSolution(tr, k){
           title="${codeWrap?"Turn off line wrap":"Wrap long lines"}" aria-pressed="${codeWrap}">
           <svg viewBox="0 0 24 24"><path d="M4 7h13a3 3 0 010 6H9m0 0l3-3m-3 3l3 3M4 17h9"/></svg>
         </button>
-        <pre class="${codeWrap?"wrap":""}">${esc(snip.code)}</pre>
+        <pre class="${codeWrap?"wrap":""}"><code class="language-cpp"></code></pre>
       </div>
     </div></td>`;
   after.after(row);
+  const codeEl = row.querySelector("pre code");
+  codeEl.textContent = snip.code;
+  if(window.hljs) hljs.highlightElement(codeEl);
 }
 document.getElementById("list").addEventListener("click", e => {
   const btn = e.target.closest('[data-wrap-btn]');
@@ -1307,10 +1313,18 @@ document.getElementById("expand").onclick = e => {
   document.querySelectorAll("details.step").forEach(d => d.open = open);
   e.target.textContent = open ? "Collapse all" : "Expand all";
 };
+/* Only the CSS theme needs to change between light/dark - the tokens hljs
+   already assigned (the hljs-keyword/hljs-string/etc classes) stay the same,
+   the stylesheet swap alone recolors every already-highlighted block. */
+function syncHljsTheme(){
+  document.getElementById("hljsTheme").href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/"
+    + (document.documentElement.dataset.theme === "dark" ? "vs2015" : "vs") + ".min.css";
+}
 document.getElementById("theme").onclick = () => {
   const el = document.documentElement;
   el.dataset.theme = el.dataset.theme === "dark" ? "light" : "dark";
   ls.set(KEY + "-theme", el.dataset.theme);
+  syncHljsTheme();
 };
 /* Your own progress never needs this - checking a box saves to this browser
    instantly. This is only for fetching a newer deploy of the page itself:
@@ -1321,7 +1335,7 @@ document.getElementById("theme").onclick = () => {
 document.getElementById("checkUpdate").onclick = () => {
   location.href = location.pathname + "?_=" + Date.now();
 };
-{ const t = ls.get(KEY + "-theme"); if(t) document.documentElement.dataset.theme = t; }
+{ const t = ls.get(KEY + "-theme"); if(t) document.documentElement.dataset.theme = t; syncHljsTheme(); }
 { const saved = ls.get(KEY + "-ai-provider"); if(AI_PROVIDERS[saved]) aiProvider = saved; }
 
 /* Below 760px .menu switches to position:fixed (see CSS) so a menu anchored
