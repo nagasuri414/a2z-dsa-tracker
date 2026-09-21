@@ -198,8 +198,17 @@
   .offer .txt span{color:var(--muted);font-size:12.5px}
 
   /* ---- toolbar ---- */
-  .toolbar{position:sticky;top:0;z-index:20;display:flex;gap:8px;flex-wrap:wrap;
-    padding:12px 0;margin-bottom:6px;background:var(--bg);border-bottom:1px solid var(--line-soft)}
+  .sticky-nav{position:sticky;top:0;z-index:20;background:var(--bg);
+    border-bottom:1px solid var(--line-soft);transition:transform .22s ease}
+  .sticky-nav.hide{transform:translateY(-100%)}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;padding:12px 0 8px}
+  .step-jump{display:flex;gap:6px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none}
+  .step-jump::-webkit-scrollbar{display:none}
+  .step-chip{flex:none;padding:5px 12px;border-radius:99px;border:1px solid var(--line);
+    background:var(--surface);color:var(--muted);font-size:12px;font-weight:650;cursor:pointer;
+    font-family:inherit;transition:color .12s,border-color .12s,background .12s}
+  .step-chip:hover,.step-chip:focus-visible{color:var(--accent);border-color:var(--accent)}
+  .step-chip.active{color:#fff;background:var(--accent);border-color:var(--accent)}
   .search{position:relative;flex:1;min-width:210px}
   .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;
     stroke:var(--faint);fill:none;stroke-width:1.8}
@@ -319,16 +328,19 @@
     .wrap{padding:18px 9px 80px}
     .top{flex-direction:column;gap:12px}
     .tools{justify-content:flex-start}
-    .hero{gap:18px;padding:17px}
-    .quote-banner{align-items:flex-start;gap:10px;padding:16px}
-    .quote-mark{font-size:48px;margin-top:7px}
+    .hero{gap:18px;padding:14px;margin-bottom:8px}
+    .quote-banner{align-items:flex-start;gap:10px;padding:14px;margin-bottom:8px;min-height:0}
+    .quote-mark{font-size:40px;margin-top:5px}
     .quote-next{align-self:flex-end}
     .track-sm{display:none}
+    .strip,.offer{margin-bottom:8px;padding:9px 12px}
+    .goal{margin-bottom:8px;padding:14px 14px}
     td.diff{display:none}
     td.name{min-width:0}
     td.links{width:auto;white-space:normal}
     .links a{margin:3px 0 0 4px;padding:2px 5px}
     .goal-kpis{grid-template-columns:repeat(2,minmax(112px,1fr))}
+    .code-note pre{white-space:pre-wrap;overflow-wrap:anywhere;overflow-x:visible}
   }
   @media(max-width:520px){.quote-banner{flex-wrap:wrap}.quote-copy{flex-basis:calc(100% - 60px)}
     .quote-next{margin-left:auto}
@@ -458,14 +470,17 @@
 
   <div class="strip" id="strip"></div>
 
-  <div class="toolbar">
-    <div class="search">
-      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-      <input type="search" id="q" placeholder="Search problems, steps or topics…">
+  <div class="sticky-nav" id="stickyNav">
+    <div class="toolbar">
+      <div class="search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input type="search" id="q" placeholder="Search problems, steps or topics…">
+      </div>
+      <select id="fDiff"><option value="">All difficulty</option><option value="e">Easy</option><option value="m">Medium</option><option value="h">Hard</option></select>
+      <select id="fStat"><option value="">All status</option><option value="done">Solved</option><option value="todo">Unsolved</option><option value="revisit">Starred</option><option value="noted">Has notes</option></select>
+      <button class="btn btn-quiet" id="reset">Clear</button>
     </div>
-    <select id="fDiff"><option value="">All difficulty</option><option value="e">Easy</option><option value="m">Medium</option><option value="h">Hard</option></select>
-    <select id="fStat"><option value="">All status</option><option value="done">Solved</option><option value="todo">Unsolved</option><option value="revisit">Starred</option><option value="noted">Has notes</option></select>
-    <button class="btn btn-quiet" id="reset">Clear</button>
+    <div class="step-jump" id="stepJump"></div>
   </div>
 
   <div id="list"></div>
@@ -578,7 +593,7 @@ const ICON = {
 /* ---------------- state ---------------- */
 let state = load(), fileHandle = null, fileName = "", writeTimer = null,
     goalEditing = false, activityDate = "",
-    reportCollapsed = ls.get(KEY + "-report-collapsed") === "1";
+    reportCollapsed = ls.get(KEY + "-report-collapsed") !== "0";
 
 function blank(){
   return {schema:SCHEMA, items:{}, goal:null, lastBackup:null, changes:0};
@@ -866,6 +881,9 @@ function render(){
       }).join("")}
     </details>`;
   }).join("");
+  document.getElementById("stepJump").innerHTML = steps.map(s =>
+    `<button class="step-chip" data-jump="${s}">${s}</button>`).join("");
+  document.querySelectorAll("details.step").forEach(d => stepObserver.observe(d));
   repaintAll();
 }
 function rowHTML(p){
@@ -1178,6 +1196,40 @@ function applyFilters(){
     if(active && any) d.open = true;
   });
   document.getElementById("empty").classList.toggle("hidden", shown > 0);
+}
+
+/* ---------------- step jump ---------------- */
+const stepObserver = new IntersectionObserver(entries => {
+  entries.forEach(en => {
+    if(!en.isIntersecting) return;
+    const s = en.target.dataset.step;
+    document.querySelectorAll(".step-chip").forEach(c => c.classList.toggle("active", c.dataset.jump === s));
+  });
+}, {rootMargin: "-8% 0px -80% 0px"});
+document.getElementById("stepJump").addEventListener("click", e => {
+  const btn = e.target.closest(".step-chip");
+  if(!btn) return;
+  const target = document.querySelector(`details.step[data-step="${btn.dataset.jump}"]`);
+  if(!target) return;
+  target.open = true;
+  target.scrollIntoView({behavior:"smooth", block:"start"});
+});
+/* On mobile, the sticky search/step-jump bar hides while scrolling down (more
+   room to read) and reappears on scroll-up. Left alone on wider screens. */
+{
+  const nav = document.getElementById("stickyNav"), isMobile = window.matchMedia("(max-width:760px)");
+  let lastY = window.scrollY, ticking = false;
+  window.addEventListener("scroll", () => {
+    if(!isMobile.matches){ nav.classList.remove("hide"); return; }
+    if(ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const y = window.scrollY;
+      nav.classList.toggle("hide", y > lastY && y > 120);
+      lastY = y;
+      ticking = false;
+    });
+  }, {passive:true});
 }
 
 /* ---------------- controls ---------------- */
