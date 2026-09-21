@@ -1,1 +1,242 @@
-{}
+{
+  "s15-graph-and-types": {
+    "trick": "A graph has vertices and edges; directed edges go one way, while undirected edges are stored in both directions.",
+    "time": "O(1) per added edge",
+    "space": "O(V + E)",
+    "code": "#include <stdexcept>\n#include <vector>\nusing namespace std;\nclass Graph {\n    vector<vector<int>> adj;\n    bool directed;\npublic:\n    Graph(int vertices, bool directed)\n        : adj(vertices), directed(directed) {\n        if (vertices < 0) throw invalid_argument(\"negative vertex count\");\n    }\n    void addEdge(int from, int to) {\n        if (from < 0 || to < 0 || from >= (int)adj.size() || to >= (int)adj.size())\n            throw out_of_range(\"vertex\");\n        adj[from].push_back(to);\n        if (!directed) adj[to].push_back(from); // two-way edge\n    }\n    const vector<vector<int>>& neighbors() const { return adj; }\n};"
+  },
+  "s15-graph-representation-c": {
+    "trick": "For a sparse undirected graph, an adjacency list stores each edge at both endpoints and uses O(V+E) space.",
+    "time": "O(V + E) to build",
+    "space": "O(V + E)",
+    "code": "#include <stdexcept>\n#include <utility>\n#include <vector>\nusing namespace std;\nvector<vector<int>> undirectedAdjacencyList(\n    int vertices, const vector<pair<int,int>>& edges) {\n    if (vertices < 0) throw invalid_argument(\"negative vertex count\");\n    vector<vector<int>> adj(vertices);\n    for (auto [u, v] : edges) {\n        if (u < 0 || v < 0 || u >= vertices || v >= vertices)\n            throw out_of_range(\"vertex\");\n        adj[u].push_back(v);\n        adj[v].push_back(u);\n    }\n    return adj;\n}"
+  },
+  "s15-graph-representation-java": {
+    "trick": "This roadmap lesson uses Java collections; the equivalent C++ representation is a vector of neighbor vectors, one per vertex.",
+    "time": "O(V + E) to build",
+    "space": "O(V + E)",
+    "code": "#include <stdexcept>\n#include <utility>\n#include <vector>\nusing namespace std;\nvector<vector<int>> directedAdjacencyList(\n    int vertices, const vector<pair<int,int>>& edges) {\n    if (vertices < 0) throw invalid_argument(\"negative vertex count\");\n    vector<vector<int>> adj(vertices);\n    for (auto [from, to] : edges) {\n        if (from < 0 || to < 0 || from >= vertices || to >= vertices)\n            throw out_of_range(\"vertex\");\n        adj[from].push_back(to); // directed: no reverse edge\n    }\n    return adj;\n}"
+  },
+  "s15-connected-components-logic-explanation": {
+    "trick": "Start a traversal from each unvisited vertex. Every completed traversal marks exactly one connected component.",
+    "time": "O(V + E)",
+    "space": "O(V) visited and BFS queue",
+    "code": "#include <queue>\n#include <vector>\nusing namespace std;\nint countComponents(const vector<vector<int>>& adj) {\n    int n = (int)adj.size(), count = 0;\n    vector<char> seen(n, false);\n    for (int start = 0; start < n; ++start) {\n        if (seen[start]) continue;\n        ++count; // a new unvisited start means a new component\n        queue<int> q;\n        q.push(start);\n        seen[start] = true;\n        while (!q.empty()) {\n            int u = q.front(); q.pop();\n            for (int v : adj[u]) if (!seen[v]) {\n                seen[v] = true;\n                q.push(v);\n            }\n        }\n    }\n    return count; // adjacency list describes an undirected graph\n}"
+  },
+  "s15-bfs": {
+    "trick": "A queue visits all vertices one edge away before moving to the next level. Restart at unvisited vertices to include disconnected components.",
+    "time": "O(V + E)",
+    "space": "O(V)",
+    "code": "#include <queue>\n#include <vector>\nusing namespace std;\nvector<int> bfsAll(const vector<vector<int>>& adj) {\n    vector<int> order;\n    vector<char> seen(adj.size(), false);\n    for (int start = 0; start < (int)adj.size(); ++start) {\n        if (seen[start]) continue;\n        queue<int> q;\n        q.push(start);\n        seen[start] = true;\n        while (!q.empty()) {\n            int u = q.front(); q.pop();\n            order.push_back(u);\n            for (int v : adj[u]) if (!seen[v]) {\n                seen[v] = true; // mark when enqueued, not when popped\n                q.push(v);\n            }\n        }\n    }\n    return order;\n}"
+  },
+  "s15-dfs": {
+    "trick": "Depth-first search follows one path until it cannot continue, then backtracks. Restart to cover disconnected components.",
+    "time": "O(V + E)",
+    "space": "O(V) visited and call stack",
+    "code": "#include <vector>\nusing namespace std;\nvoid dfsVisit(int u, const vector<vector<int>>& adj,\n              vector<char>& seen, vector<int>& order) {\n    seen[u] = true;\n    order.push_back(u);\n    for (int v : adj[u]) if (!seen[v])\n        dfsVisit(v, adj, seen, order);\n}\nvector<int> dfsAll(const vector<vector<int>>& adj) {\n    vector<char> seen(adj.size(), false);\n    vector<int> order;\n    for (int u = 0; u < (int)adj.size(); ++u)\n        if (!seen[u]) dfsVisit(u, adj, seen, order);\n    return order;\n}"
+  },
+  "s15-number-of-provinces-leetcode": {
+    "trick": "Treat the symmetric connectivity matrix as an undirected graph. DFS from each unvisited city to count provinces.",
+    "time": "O(V²)",
+    "space": "O(V) visited and call stack",
+    "code": "#include <vector>\nusing namespace std;\nvoid provinceDfs(int city, const vector<vector<int>>& connected,\n                 vector<char>& seen) {\n    seen[city] = true;\n    for (int other = 0; other < (int)connected.size(); ++other)\n        if (connected[city][other] && !seen[other])\n            provinceDfs(other, connected, seen);\n}\nint findCircleNum(const vector<vector<int>>& connected) {\n    int n = (int)connected.size(), provinces = 0;\n    vector<char> seen(n, false);\n    for (int city = 0; city < n; ++city)\n        if (!seen[city]) {\n            ++provinces;\n            provinceDfs(city, connected, seen);\n        }\n    return provinces;\n}"
+  },
+  "s15-connected-components-problem-in-matrix": {
+    "trick": "For an undirected adjacency matrix, BFS from each unseen vertex and collect the vertices of that connected component.",
+    "time": "O(V²)",
+    "space": "O(V) excluding component output",
+    "code": "#include <queue>\n#include <vector>\nusing namespace std;\nvector<vector<int>> matrixComponents(const vector<vector<int>>& matrix) {\n    int n = (int)matrix.size();\n    vector<char> seen(n, false);\n    vector<vector<int>> components;\n    for (int start = 0; start < n; ++start) {\n        if (seen[start]) continue;\n        vector<int> component;\n        queue<int> q;\n        q.push(start);\n        seen[start] = true;\n        while (!q.empty()) {\n            int u = q.front(); q.pop();\n            component.push_back(u);\n            for (int v = 0; v < n; ++v)\n                if (matrix[u][v] && !seen[v]) {\n                    seen[v] = true;\n                    q.push(v);\n                }\n        }\n        components.push_back(component);\n    }\n    return components;\n}"
+  },
+  "s15-rotten-oranges": {
+    "trick": "Put all initially rotten oranges in one BFS queue. Each BFS layer rots adjacent fresh oranges one minute later.",
+    "time": "O(R · C)",
+    "space": "O(R · C) queue",
+    "code": "#include <queue>\n#include <utility>\n#include <vector>\nusing namespace std;\nint orangesRotting(vector<vector<int>> grid) {\n    int rows = (int)grid.size();\n    if (!rows) return 0;\n    int cols = (int)grid[0].size(), fresh = 0;\n    queue<pair<int,int>> q;\n    for (int r = 0; r < rows; ++r)\n        for (int c = 0; c < cols; ++c) {\n            if (grid[r][c] == 2) q.push({r, c});\n            else if (grid[r][c] == 1) ++fresh;\n        }\n    int minutes = 0;\n    const int dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\n    while (!q.empty() && fresh > 0) {\n        int width = (int)q.size();\n        ++minutes; // this layer infects neighbors in one minute\n        while (width--) {\n            auto [r, c] = q.front(); q.pop();\n            for (int i = 0; i < 4; ++i) {\n                int nr = r + dr[i], nc = c + dc[i];\n                if (nr < 0 || nc < 0 || nr >= rows || nc >= cols\n                    || grid[nr][nc] != 1) continue;\n                grid[nr][nc] = 2;\n                --fresh;\n                q.push({nr, nc});\n            }\n        }\n    }\n    return fresh == 0 ? minutes : -1;\n}"
+  },
+  "s15-flood-fill": {
+    "trick": "Start from the chosen cell and BFS only through cells of its original color, recoloring each when it is enqueued.",
+    "time": "O(R · C)",
+    "space": "O(R · C) queue",
+    "code": "#include <queue>\n#include <utility>\n#include <vector>\nusing namespace std;\nvector<vector<int>> floodFill(vector<vector<int>> image,\n                              int startRow, int startCol, int newColor) {\n    int rows = (int)image.size();\n    if (!rows || startRow < 0 || startRow >= rows\n        || startCol < 0 || startCol >= (int)image[0].size()) return image;\n    int cols = (int)image[0].size();\n    int original = image[startRow][startCol];\n    if (original == newColor) return image;\n    queue<pair<int,int>> q;\n    q.push({startRow, startCol});\n    image[startRow][startCol] = newColor;\n    const int dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\n    while (!q.empty()) {\n        auto [r, c] = q.front(); q.pop();\n        for (int i = 0; i < 4; ++i) {\n            int nr = r + dr[i], nc = c + dc[i];\n            if (nr < 0 || nc < 0 || nr >= rows || nc >= cols\n                || image[nr][nc] != original) continue;\n            image[nr][nc] = newColor; // mark before enqueue to avoid repeats\n            q.push({nr, nc});\n        }\n    }\n    return image;\n}"
+  },
+  "s15-cycle-detection-in-unirected-graph-bfs": {
+    "trick": "In an undirected BFS, a previously visited neighbor is a cycle only when it is not the current node's parent.",
+    "time": "O(V + E)",
+    "space": "O(V)",
+    "code": "#include <queue>\n#include <utility>\n#include <vector>\nusing namespace std;\nbool hasUndirectedCycleBfs(const vector<vector<int>>& adj) {\n    vector<char> seen(adj.size(), false);\n    for (int start = 0; start < (int)adj.size(); ++start) {\n        if (seen[start]) continue;\n        queue<pair<int,int>> q;\n        q.push({start, -1});\n        seen[start] = true;\n        while (!q.empty()) {\n            auto [u, parent] = q.front(); q.pop();\n            for (int v : adj[u]) {\n                if (!seen[v]) {\n                    seen[v] = true;\n                    q.push({v, u});\n                } else if (v != parent) return true;\n            }\n        }\n    }\n    return false; // assumes a simple undirected graph\n}"
+  },
+  "s15-cycle-detection-in-undirected-graph-dfs": {
+    "trick": "During DFS, an edge to an already visited node other than the parent closes a cycle.",
+    "time": "O(V + E)",
+    "space": "O(V) visited and call stack",
+    "code": "#include <vector>\nusing namespace std;\nbool cycleDfs(int u, int parent, const vector<vector<int>>& adj,\n              vector<char>& seen) {\n    seen[u] = true;\n    for (int v : adj[u]) {\n        if (!seen[v]) {\n            if (cycleDfs(v, u, adj, seen)) return true;\n        } else if (v != parent) return true;\n    }\n    return false;\n}\nbool hasUndirectedCycleDfs(const vector<vector<int>>& adj) {\n    vector<char> seen(adj.size(), false);\n    for (int u = 0; u < (int)adj.size(); ++u)\n        if (!seen[u] && cycleDfs(u, -1, adj, seen)) return true;\n    return false; // assumes a simple undirected graph\n}"
+  },
+  "s15-0-1-matrix-bfs-problem": {
+    "trick": "Start BFS simultaneously from every zero. The first time a one-cell is reached gives its shortest distance to any zero.",
+    "time": "O(R · C)",
+    "space": "O(R · C)",
+    "code": "#include <queue>\n#include <utility>\n#include <vector>\nusing namespace std;\nvector<vector<int>> updateMatrix(const vector<vector<int>>& grid) {\n    int rows = (int)grid.size();\n    if (!rows) return {};\n    int cols = (int)grid[0].size();\n    vector<vector<int>> distance(rows, vector<int>(cols, -1));\n    queue<pair<int,int>> q;\n    for (int r = 0; r < rows; ++r)\n        for (int c = 0; c < cols; ++c)\n            if (grid[r][c] == 0) {\n                distance[r][c] = 0;\n                q.push({r, c});\n            }\n    const int dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\n    while (!q.empty()) {\n        auto [r, c] = q.front(); q.pop();\n        for (int i = 0; i < 4; ++i) {\n            int nr = r + dr[i], nc = c + dc[i];\n            if (nr < 0 || nc < 0 || nr >= rows || nc >= cols\n                || distance[nr][nc] != -1) continue;\n            distance[nr][nc] = distance[r][c] + 1;\n            q.push({nr, nc});\n        }\n    }\n    return distance; // -1 if the matrix contains no zero\n}"
+  },
+  "s15-surrounded-regions-dfs": {
+    "trick": "Mark every 'O' connected to a boundary 'O' as safe. Afterward flip only unmarked 'O' cells to 'X'.",
+    "time": "O(R · C)",
+    "space": "O(R · C) worst-case call stack",
+    "code": "#include <vector>\nusing namespace std;\nvoid markBoundary(vector<vector<char>>& board, int r, int c) {\n    int rows = (int)board.size(), cols = (int)board[0].size();\n    if (r < 0 || c < 0 || r >= rows || c >= cols || board[r][c] != 'O')\n        return;\n    board[r][c] = '#'; // temporarily protect boundary-connected cells\n    markBoundary(board, r + 1, c);\n    markBoundary(board, r - 1, c);\n    markBoundary(board, r, c + 1);\n    markBoundary(board, r, c - 1);\n}\nvoid solveSurrounded(vector<vector<char>>& board) {\n    if (board.empty() || board[0].empty()) return;\n    int rows = (int)board.size(), cols = (int)board[0].size();\n    for (int r = 0; r < rows; ++r) {\n        markBoundary(board, r, 0);\n        markBoundary(board, r, cols - 1);\n    }\n    for (int c = 0; c < cols; ++c) {\n        markBoundary(board, 0, c);\n        markBoundary(board, rows - 1, c);\n    }\n    for (auto& row : board)\n        for (char& cell : row)\n            if (cell == 'O') cell = 'X';\n            else if (cell == '#') cell = 'O';\n}"
+  },
+  "s15-number-of-enclaves-flood-fill-implementation-mul": {
+    "trick": "Flood-fill all land connected to a boundary cell. The land left afterward is enclosed and can be counted.",
+    "time": "O(R · C)",
+    "space": "O(R · C) queue and grid copy",
+    "code": "#include <queue>\n#include <utility>\n#include <vector>\nusing namespace std;\nint numEnclaves(vector<vector<int>> grid) {\n    int rows = (int)grid.size();\n    if (!rows) return 0;\n    int cols = (int)grid[0].size();\n    queue<pair<int,int>> q;\n    for (int r = 0; r < rows; ++r)\n        for (int c = 0; c < cols; ++c)\n            if (grid[r][c] == 1 &&\n                (r == 0 || c == 0 || r == rows - 1 || c == cols - 1)) {\n                grid[r][c] = 0;\n                q.push({r, c});\n            }\n    const int dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\n    while (!q.empty()) {\n        auto [r, c] = q.front(); q.pop();\n        for (int i = 0; i < 4; ++i) {\n            int nr = r + dr[i], nc = c + dc[i];\n            if (nr < 0 || nc < 0 || nr >= rows || nc >= cols\n                || grid[nr][nc] != 1) continue;\n            grid[nr][nc] = 0; // remove boundary-reachable land\n            q.push({nr, nc});\n        }\n    }\n    int enclosed = 0;\n    for (const auto& row : grid)\n        for (int cell : row) enclosed += cell == 1;\n    return enclosed;\n}"
+  },
+  "s15-word-ladder-1": {
+    "trick": "BFS words differing by one character. The first time endWord is reached gives the shortest transformation length.",
+    "time": "O(N · L · 26), N dictionary words of length L",
+    "space": "O(N · L)",
+    "code": "#include <queue>\n#include <string>\n#include <unordered_set>\n#include <vector>\nusing namespace std;\nint ladderLength(const string& beginWord, const string& endWord,\n                 const vector<string>& wordList) {\n    if (beginWord == endWord) return 1;\n    unordered_set<string> available(wordList.begin(), wordList.end());\n    if (!available.count(endWord)) return 0;\n    queue<pair<string,int>> q;\n    q.push({beginWord, 1});\n    available.erase(beginWord);\n    while (!q.empty()) {\n        auto [word, length] = q.front(); q.pop();\n        for (int i = 0; i < (int)word.size(); ++i) {\n            string next = word;\n            for (char ch = 'a'; ch <= 'z'; ++ch) {\n                if (ch == word[i]) continue;\n                next[i] = ch;\n                if (next == endWord) return length + 1;\n                if (available.erase(next)) q.push({next, length + 1});\n            }\n        }\n    }\n    return 0;\n}"
+  },
+  "s15-word-ladder-2": {
+    "trick": "BFS assigns shortest distances and records every parent reaching a word at that distance. Backtrack from the end through those parents to list all shortest ladders.",
+    "time": "O(N · L · 26 + output size · L)",
+    "space": "O(N · L + output size)",
+    "code": "#include <algorithm>\n#include <queue>\n#include <string>\n#include <unordered_map>\n#include <unordered_set>\n#include <vector>\nusing namespace std;\nvoid ladderPaths(const string& word, const string& start,\n                 const unordered_map<string, vector<string>>& parents,\n                 vector<string>& reversed, vector<vector<string>>& answer) {\n    if (word == start) {\n        answer.emplace_back(reversed.rbegin(), reversed.rend());\n        return;\n    }\n    auto it = parents.find(word);\n    if (it == parents.end()) return;\n    for (const string& previous : it->second) {\n        reversed.push_back(previous);\n        ladderPaths(previous, start, parents, reversed, answer);\n        reversed.pop_back();\n    }\n}\nvector<vector<string>> findLadders(const string& beginWord,\n                                   const string& endWord,\n                                   const vector<string>& wordList) {\n    if (beginWord == endWord) return {{beginWord}};\n    unordered_set<string> dictionary(wordList.begin(), wordList.end());\n    if (!dictionary.count(endWord)) return {};\n    unordered_map<string,int> distance;\n    unordered_map<string,vector<string>> parents;\n    queue<string> q;\n    q.push(beginWord);\n    distance[beginWord] = 0;\n    int shortest = -1;\n    while (!q.empty()) {\n        string word = q.front(); q.pop();\n        int steps = distance[word];\n        if (shortest != -1 && steps >= shortest) continue;\n        for (int i = 0; i < (int)word.size(); ++i) {\n            string next = word;\n            for (char ch = 'a'; ch <= 'z'; ++ch) {\n                if (ch == word[i]) continue;\n                next[i] = ch;\n                if (!dictionary.count(next)) continue;\n                auto it = distance.find(next);\n                if (it == distance.end()) {\n                    distance[next] = steps + 1;\n                    parents[next].push_back(word);\n                    q.push(next);\n                    if (next == endWord) shortest = steps + 1;\n                } else if (it->second == steps + 1) {\n                    parents[next].push_back(word); // another shortest parent\n                }\n            }\n        }\n    }\n    vector<vector<string>> answer;\n    if (shortest == -1) return answer;\n    vector<string> reversed{endWord};\n    ladderPaths(endWord, beginWord, parents, reversed, answer);\n    return answer;\n}"
+  },
+  "s15-number-of-distinct-islands-dfs-multisource": {
+    "trick": "Record every island cell as an offset from its starting cell. Translation-equivalent islands produce the same sorted offset list.",
+    "time": "O(R · C log(R · C)) worst case",
+    "space": "O(R · C)",
+    "code": "#include <algorithm>\n#include <set>\n#include <utility>\n#include <vector>\nusing namespace std;\nvoid islandShape(const vector<vector<int>>& grid, int r, int c,\n                 int baseR, int baseC, vector<vector<char>>& seen,\n                 vector<pair<int,int>>& shape) {\n    int rows = (int)grid.size(), cols = (int)grid[0].size();\n    if (r < 0 || c < 0 || r >= rows || c >= cols\n        || grid[r][c] == 0 || seen[r][c]) return;\n    seen[r][c] = true;\n    shape.push_back({r - baseR, c - baseC});\n    islandShape(grid, r + 1, c, baseR, baseC, seen, shape);\n    islandShape(grid, r - 1, c, baseR, baseC, seen, shape);\n    islandShape(grid, r, c + 1, baseR, baseC, seen, shape);\n    islandShape(grid, r, c - 1, baseR, baseC, seen, shape);\n}\nint countDistinctIslands(const vector<vector<int>>& grid) {\n    if (grid.empty() || grid[0].empty()) return 0;\n    int rows = (int)grid.size(), cols = (int)grid[0].size();\n    vector<vector<char>> seen(rows, vector<char>(cols));\n    set<vector<pair<int,int>>> shapes;\n    for (int r = 0; r < rows; ++r)\n        for (int c = 0; c < cols; ++c)\n            if (grid[r][c] && !seen[r][c]) {\n                vector<pair<int,int>> shape;\n                islandShape(grid, r, c, r, c, seen, shape);\n                sort(shape.begin(), shape.end()); // traversal order is irrelevant\n                shapes.insert(shape);\n            }\n    return (int)shapes.size();\n}"
+  },
+  "s15-bipartite-graph-dfs": {
+    "trick": "Color each component with two alternating colors. An edge joining equal colors proves the graph is not bipartite.",
+    "time": "O(V + E)",
+    "space": "O(V) colors and call stack",
+    "code": "#include <vector>\nusing namespace std;\nbool colorDfs(int u, int color, const vector<vector<int>>& adj,\n              vector<int>& colors) {\n    colors[u] = color;\n    for (int v : adj[u]) {\n        if (colors[v] == color) return false;\n        if (colors[v] == 0 && !colorDfs(v, -color, adj, colors))\n            return false;\n    }\n    return true;\n}\nbool isBipartite(const vector<vector<int>>& adj) {\n    vector<int> colors(adj.size(), 0);\n    for (int u = 0; u < (int)adj.size(); ++u)\n        if (colors[u] == 0 && !colorDfs(u, 1, adj, colors))\n            return false;\n    return true;\n}"
+  },
+  "s15-cycle-detection-in-directed-graph-dfs": {
+    "trick": "Mark DFS states as unseen, active, or finished. An edge to an active node is a back edge and forms a directed cycle.",
+    "time": "O(V + E)",
+    "space": "O(V)",
+    "code": "#include <vector>\nusing namespace std;\nbool directedCycleDfs(int u, const vector<vector<int>>& adj,\n                      vector<char>& state) {\n    state[u] = 1; // active in the current DFS path\n    for (int v : adj[u]) {\n        if (state[v] == 1) return true;\n        if (state[v] == 0 && directedCycleDfs(v, adj, state)) return true;\n    }\n    state[u] = 2; // fully explored\n    return false;\n}\nbool hasDirectedCycle(const vector<vector<int>>& adj) {\n    vector<char> state(adj.size(), 0);\n    for (int u = 0; u < (int)adj.size(); ++u)\n        if (state[u] == 0 && directedCycleDfs(u, adj, state))\n            return true;\n    return false;\n}"
+  },
+  "s15-topo-sort": {
+    "trick": "In a DAG, append each node after recursively visiting its outgoing neighbors, then reverse the postorder. An active back edge means no topological order exists.",
+    "time": "O(V + E)",
+    "space": "O(V)",
+    "code": "#include <algorithm>\n#include <vector>\nusing namespace std;\nbool topoDfs(int u, const vector<vector<int>>& adj,\n             vector<char>& state, vector<int>& order) {\n    state[u] = 1;\n    for (int v : adj[u]) {\n        if (state[v] == 1) return false; // directed cycle\n        if (state[v] == 0 && !topoDfs(v, adj, state, order)) return false;\n    }\n    state[u] = 2;\n    order.push_back(u);\n    return true;\n}\nvector<int> topoSortDfs(const vector<vector<int>>& adj) {\n    vector<char> state(adj.size(), 0);\n    vector<int> order;\n    for (int u = 0; u < (int)adj.size(); ++u)\n        if (state[u] == 0 && !topoDfs(u, adj, state, order))\n            return {};\n    reverse(order.begin(), order.end());\n    return order;\n}"
+  },
+  "s15-kahn-s-algorithm": {
+    "trick": "Repeatedly take a zero-indegree vertex, output it, and decrement its neighbors' indegrees. Fewer than V outputs means a cycle.",
+    "time": "O(V + E)",
+    "space": "O(V)",
+    "code": "#include <queue>\n#include <vector>\nusing namespace std;\nvector<int> topoSortKahn(const vector<vector<int>>& adj) {\n    int n = (int)adj.size();\n    vector<int> indegree(n);\n    for (const auto& neighbors : adj)\n        for (int v : neighbors) ++indegree[v];\n    queue<int> ready;\n    for (int u = 0; u < n; ++u)\n        if (indegree[u] == 0) ready.push(u);\n    vector<int> order;\n    while (!ready.empty()) {\n        int u = ready.front(); ready.pop();\n        order.push_back(u);\n        for (int v : adj[u])\n            if (--indegree[v] == 0) ready.push(v);\n    }\n    return (int)order.size() == n ? order : vector<int>{};\n}"
+  },
+  "s15-cycle-detection-in-directed-graph-bfs": {
+    "trick": "Kahn's zero-indegree process removes every vertex of a DAG. If any vertices remain, they participate in or depend on a directed cycle.",
+    "time": "O(V + E)",
+    "space": "O(V)",
+    "code": "#include <queue>\n#include <vector>\nusing namespace std;\nbool hasDirectedCycleKahn(const vector<vector<int>>& adj) {\n    int n = (int)adj.size();\n    vector<int> indegree(n);\n    for (const auto& neighbors : adj)\n        for (int v : neighbors) ++indegree[v];\n    queue<int> q;\n    for (int u = 0; u < n; ++u) if (indegree[u] == 0) q.push(u);\n    int removed = 0;\n    while (!q.empty()) {\n        int u = q.front(); q.pop();\n        ++removed;\n        for (int v : adj[u])\n            if (--indegree[v] == 0) q.push(v);\n    }\n    return removed != n;\n}"
+  },
+  "s15-course-schedule-i": {
+    "trick": "Add prerequisite→course edges. All courses can finish exactly when Kahn's algorithm removes every vertex.",
+    "time": "O(V + E)",
+    "space": "O(V + E)",
+    "code": "#include <queue>\n#include <utility>\n#include <vector>\nusing namespace std;\nbool canFinish(int courses, const vector<pair<int,int>>& prerequisites) {\n    vector<vector<int>> adj(courses);\n    vector<int> indegree(courses);\n    for (auto [course, before] : prerequisites) {\n        adj[before].push_back(course);\n        ++indegree[course];\n    }\n    queue<int> q;\n    for (int u = 0; u < courses; ++u)\n        if (indegree[u] == 0) q.push(u);\n    int completed = 0;\n    while (!q.empty()) {\n        int u = q.front(); q.pop();\n        ++completed;\n        for (int v : adj[u])\n            if (--indegree[v] == 0) q.push(v);\n    }\n    return completed == courses;\n}"
+  },
+  "s15-course-schedule-ii": {
+    "trick": "Build prerequisite→course edges and record the order in which Kahn's algorithm removes zero-indegree courses.",
+    "time": "O(V + E)",
+    "space": "O(V + E)",
+    "code": "#include <queue>\n#include <utility>\n#include <vector>\nusing namespace std;\nvector<int> findCourseOrder(int courses,\n                            const vector<pair<int,int>>& prerequisites) {\n    vector<vector<int>> adj(courses);\n    vector<int> indegree(courses);\n    for (auto [course, before] : prerequisites) {\n        adj[before].push_back(course);\n        ++indegree[course];\n    }\n    queue<int> q;\n    for (int u = 0; u < courses; ++u)\n        if (indegree[u] == 0) q.push(u);\n    vector<int> order;\n    while (!q.empty()) {\n        int u = q.front(); q.pop();\n        order.push_back(u);\n        for (int v : adj[u])\n            if (--indegree[v] == 0) q.push(v);\n    }\n    return (int)order.size() == courses ? order : vector<int>{};\n}"
+  },
+  "s15-find-eventual-safe-states": {
+    "trick": "Reverse every edge and track original outdegree. Nodes with outdegree zero are safe; removing them may make predecessors safe.",
+    "time": "O(V + E + V log V) including output sort",
+    "space": "O(V + E)",
+    "code": "#include <algorithm>\n#include <queue>\n#include <vector>\nusing namespace std;\nvector<int> eventualSafeNodes(const vector<vector<int>>& graph) {\n    int n = (int)graph.size();\n    vector<vector<int>> reverse(n);\n    vector<int> outdegree(n);\n    for (int u = 0; u < n; ++u) {\n        outdegree[u] = (int)graph[u].size();\n        for (int v : graph[u]) reverse[v].push_back(u);\n    }\n    queue<int> q;\n    for (int u = 0; u < n; ++u)\n        if (outdegree[u] == 0) q.push(u);\n    vector<int> safe;\n    while (!q.empty()) {\n        int u = q.front(); q.pop();\n        safe.push_back(u);\n        for (int previous : reverse[u])\n            if (--outdegree[previous] == 0) q.push(previous);\n    }\n    sort(safe.begin(), safe.end());\n    return safe;\n}"
+  },
+  "s15-alien-dictionary": {
+    "trick": "For adjacent dictionary words, the first differing letters define one ordering edge. Topologically sort those letters; reject invalid prefixes or cycles.",
+    "time": "O(total characters + E + K log K)",
+    "space": "O(K + E)",
+    "code": "#include <algorithm>\n#include <functional>\n#include <queue>\n#include <string>\n#include <unordered_set>\n#include <vector>\nusing namespace std;\nstring alienOrder(const vector<string>& words, int alphabetSize) {\n    if (alphabetSize < 0 || alphabetSize > 26) return \"\";\n    vector<unordered_set<int>> adj(alphabetSize);\n    vector<int> indegree(alphabetSize);\n    for (const string& word : words)\n        for (char ch : word)\n            if (ch < 'a' || ch >= 'a' + alphabetSize) return \"\";\n    for (int i = 1; i < (int)words.size(); ++i) {\n        const string& a = words[i - 1];\n        const string& b = words[i];\n        int j = 0;\n        while (j < (int)min(a.size(), b.size()) && a[j] == b[j]) ++j;\n        if (j == (int)min(a.size(), b.size())) {\n            if (a.size() > b.size()) return \"\"; // invalid prefix order\n        } else {\n            int from = a[j] - 'a', to = b[j] - 'a';\n            if (adj[from].insert(to).second) ++indegree[to];\n        }\n    }\n    priority_queue<int, vector<int>, greater<int>> ready;\n    for (int u = 0; u < alphabetSize; ++u)\n        if (indegree[u] == 0) ready.push(u);\n    string order;\n    while (!ready.empty()) {\n        int u = ready.top(); ready.pop();\n        order.push_back(char('a' + u));\n        for (int v : adj[u])\n            if (--indegree[v] == 0) ready.push(v);\n    }\n    return (int)order.size() == alphabetSize ? order : \"\";\n}"
+  },
+  "s15-shortest-path-in-ug-with-unit-weights": {
+    "trick": "Every edge costs one, so BFS first reaches each vertex along its shortest path.",
+    "time": "O(V + E)",
+    "space": "O(V + E)",
+    "code": "#include <queue>\n#include <utility>\n#include <vector>\nusing namespace std;\nvector<int> shortestUnitPaths(int n, const vector<pair<int,int>>& edges,\n                              int source) {\n    vector<vector<int>> adj(n);\n    for (auto [u, v] : edges) {\n        adj[u].push_back(v);\n        adj[v].push_back(u);\n    }\n    vector<int> distance(n, -1);\n    queue<int> q;\n    distance[source] = 0;\n    q.push(source);\n    while (!q.empty()) {\n        int u = q.front(); q.pop();\n        for (int v : adj[u]) if (distance[v] == -1) {\n            distance[v] = distance[u] + 1; // first BFS visit is shortest\n            q.push(v);\n        }\n    }\n    return distance;\n}"
+  },
+  "s15-shortest-path-in-dag": {
+    "trick": "Topologically order the DAG, then relax each outgoing edge once after its source has its final shortest distance.",
+    "time": "O(V + E)",
+    "space": "O(V + E)",
+    "code": "#include <algorithm>\n#include <climits>\n#include <queue>\n#include <stdexcept>\n#include <tuple>\n#include <utility>\n#include <vector>\nusing namespace std;\nvector<long long> shortestDagPaths(int n,\n    const vector<tuple<int,int,int>>& edges, int source) {\n    vector<vector<pair<int,int>>> adj(n);\n    vector<int> indegree(n);\n    for (auto [u, v, weight] : edges) {\n        adj[u].push_back({v, weight});\n        ++indegree[v];\n    }\n    queue<int> q;\n    for (int u = 0; u < n; ++u) if (indegree[u] == 0) q.push(u);\n    vector<int> order;\n    while (!q.empty()) {\n        int u = q.front(); q.pop();\n        order.push_back(u);\n        for (auto [v, weight] : adj[u])\n            if (--indegree[v] == 0) q.push(v);\n    }\n    if ((int)order.size() != n) throw invalid_argument(\"graph is not a DAG\");\n    const long long INF = LLONG_MAX / 4;\n    vector<long long> distance(n, INF);\n    distance[source] = 0;\n    for (int u : order) {\n        if (distance[u] == INF) continue;\n        for (auto [v, weight] : adj[u])\n            distance[v] = min(distance[v], distance[u] + weight);\n    }\n    for (long long& value : distance) if (value == INF) value = -1;\n    return distance;\n}"
+  },
+  "s15-djisktra-s-algorithm": {
+    "trick": "For nonnegative weights, repeatedly pop the smallest tentative distance. Ignore stale heap entries created before a better path was found.",
+    "time": "O((V + E) log V)",
+    "space": "O(V + E)",
+    "code": "#include <climits>\n#include <functional>\n#include <queue>\n#include <utility>\n#include <vector>\nusing namespace std;\nvector<long long> dijkstra(const vector<vector<pair<int,int>>>& adj,\n                           int source) {\n    const long long INF = LLONG_MAX / 4;\n    vector<long long> distance(adj.size(), INF);\n    using State = pair<long long,int>; // distance, vertex\n    priority_queue<State, vector<State>, greater<State>> pq;\n    distance[source] = 0;\n    pq.push({0, source});\n    while (!pq.empty()) {\n        auto [cost, u] = pq.top(); pq.pop();\n        if (cost != distance[u]) continue; // obsolete entry\n        for (auto [v, weight] : adj[u]) {\n            long long candidate = cost + weight; // weights must be nonnegative\n            if (candidate >= distance[v]) continue;\n            distance[v] = candidate;\n            pq.push({candidate, v});\n        }\n    }\n    for (long long& value : distance) if (value == INF) value = -1;\n    return distance;\n}"
+  },
+  "s15-why-priority-queue-is-used-in-djisktra-s-algorit": {
+    "trick": "A min-priority queue exposes the closest unsettled vertex. Without decrease-key, push an improved copy and skip outdated copies when popped.",
+    "time": "O((V + E) log V)",
+    "space": "O(V + E)",
+    "code": "#include <functional>\n#include <queue>\n#include <utility>\n#include <vector>\nusing namespace std;\nlong long shortestPathTo(const vector<vector<pair<int,int>>>& adj,\n                         int source, int target) {\n    const long long INF = 4000000000000000000LL;\n    vector<long long> distance(adj.size(), INF);\n    using State = pair<long long,int>;\n    priority_queue<State, vector<State>, greater<State>> pq;\n    distance[source] = 0;\n    pq.push({0, source});\n    while (!pq.empty()) {\n        auto [cost, u] = pq.top(); pq.pop();\n        if (cost != distance[u]) continue; // no decrease-key needed\n        if (u == target) return cost;       // first valid pop is optimal\n        for (auto [v, weight] : adj[u]) {\n            if (cost + weight < distance[v]) {\n                distance[v] = cost + weight;\n                pq.push({distance[v], v});\n            }\n        }\n    }\n    return -1; // assumes nonnegative weights\n}"
+  },
+  "s15-shortest-path-in-a-binary-maze": {
+    "trick": "BFS on four-directional passable cells; each move costs one, so the first visit to the destination is shortest.",
+    "time": "O(R · C)",
+    "space": "O(R · C)",
+    "code": "#include <queue>\n#include <utility>\n#include <vector>\nusing namespace std;\nint shortestBinaryMaze(const vector<vector<int>>& grid,\n                       pair<int,int> source, pair<int,int> target) {\n    int rows = (int)grid.size();\n    if (!rows) return -1;\n    int cols = (int)grid[0].size();\n    auto valid = [&](pair<int,int> p) {\n        return p.first >= 0 && p.second >= 0\n            && p.first < rows && p.second < cols\n            && grid[p.first][p.second] == 1;\n    };\n    if (!valid(source) || !valid(target)) return -1;\n    vector<vector<int>> distance(rows, vector<int>(cols, -1));\n    queue<pair<int,int>> q;\n    q.push(source);\n    distance[source.first][source.second] = 0;\n    const int dr[4] = {1, -1, 0, 0}, dc[4] = {0, 0, 1, -1};\n    while (!q.empty()) {\n        auto [r, c] = q.front(); q.pop();\n        if (pair<int,int>{r,c} == target) return distance[r][c];\n        for (int i = 0; i < 4; ++i) {\n            int nr = r + dr[i], nc = c + dc[i];\n            if (nr < 0 || nc < 0 || nr >= rows || nc >= cols\n                || grid[nr][nc] == 0 || distance[nr][nc] != -1) continue;\n            distance[nr][nc] = distance[r][c] + 1;\n            q.push({nr,nc});\n        }\n    }\n    return -1;\n}"
+  },
+  "s15-path-with-minimum-effort": {
+    "trick": "Use Dijkstra where a path's cost is its largest height difference so far. Relax a neighbor with max(current effort, edge difference).",
+    "time": "O(R · C log(R · C))",
+    "space": "O(R · C)",
+    "code": "#include <algorithm>\n#include <climits>\n#include <cstdlib>\n#include <functional>\n#include <queue>\n#include <tuple>\n#include <vector>\nusing namespace std;\nint minimumEffortPath(const vector<vector<int>>& height) {\n    int rows = (int)height.size();\n    if (!rows || height[0].empty()) return 0;\n    int cols = (int)height[0].size();\n    vector<vector<int>> effort(rows, vector<int>(cols, INT_MAX));\n    using State = tuple<int,int,int>; // effort, row, column\n    priority_queue<State, vector<State>, greater<State>> pq;\n    effort[0][0] = 0;\n    pq.push({0,0,0});\n    const int dr[4] = {1,-1,0,0}, dc[4] = {0,0,1,-1};\n    while (!pq.empty()) {\n        auto [cost,r,c] = pq.top(); pq.pop();\n        if (cost != effort[r][c]) continue;\n        if (r == rows - 1 && c == cols - 1) return cost;\n        for (int i = 0; i < 4; ++i) {\n            int nr = r + dr[i], nc = c + dc[i];\n            if (nr < 0 || nc < 0 || nr >= rows || nc >= cols) continue;\n            int next = max(cost, abs(height[r][c] - height[nr][nc]));\n            if (next < effort[nr][nc]) {\n                effort[nr][nc] = next;\n                pq.push({next,nr,nc});\n            }\n        }\n    }\n    return -1;\n}"
+  },
+  "s15-cheapest-flights-within-k-stops": {
+    "trick": "At most k stops means at most k+1 edges. Perform k+1 Bellman-Ford rounds, copying previous distances so one round uses only one more edge.",
+    "time": "O((k + 1) · E)",
+    "space": "O(V)",
+    "code": "#include <algorithm>\n#include <climits>\n#include <tuple>\n#include <vector>\nusing namespace std;\nlong long findCheapestPrice(int n, const vector<tuple<int,int,int>>& flights,\n                            int source, int target, int k) {\n    const long long INF = LLONG_MAX / 4;\n    vector<long long> distance(n, INF);\n    distance[source] = 0;\n    for (int edges = 0; edges <= k; ++edges) {\n        vector<long long> next = distance; // do not chain two flights in one round\n        for (auto [u,v,price] : flights)\n            if (distance[u] != INF)\n                next[v] = min(next[v], distance[u] + price);\n        distance.swap(next);\n    }\n    return distance[target] == INF ? -1 : distance[target];\n}"
+  },
+  "s15-network-delay-time": {
+    "trick": "Run Dijkstra from the source in the directed network. The signal arrival time is the largest shortest-path distance, or -1 if any node is unreachable.",
+    "time": "O((V + E) log V)",
+    "space": "O(V + E)",
+    "code": "#include <algorithm>\n#include <climits>\n#include <functional>\n#include <queue>\n#include <tuple>\n#include <utility>\n#include <vector>\nusing namespace std;\nlong long networkDelayTime(int n, const vector<tuple<int,int,int>>& edges,\n                           int source) {\n    vector<vector<pair<int,int>>> adj(n + 1);\n    for (auto [u,v,weight] : edges) adj[u].push_back({v,weight});\n    const long long INF = LLONG_MAX / 4;\n    vector<long long> distance(n + 1, INF);\n    using State = pair<long long,int>;\n    priority_queue<State, vector<State>, greater<State>> pq;\n    distance[source] = 0;\n    pq.push({0,source});\n    while (!pq.empty()) {\n        auto [cost,u] = pq.top(); pq.pop();\n        if (cost != distance[u]) continue;\n        for (auto [v,weight] : adj[u])\n            if (cost + weight < distance[v]) {\n                distance[v] = cost + weight;\n                pq.push({distance[v],v});\n            }\n    }\n    long long answer = 0;\n    for (int u = 1; u <= n; ++u) {\n        if (distance[u] == INF) return -1;\n        answer = max(answer, distance[u]);\n    }\n    return answer; // nodes are numbered 1 through n\n}"
+  },
+  "s15-number-of-ways-to-arrive-at-destination": {
+    "trick": "Dijkstra computes shortest distances while each relaxation carries the count of shortest paths. Add counts when a different route ties the best distance.",
+    "time": "O((V + E) log V)",
+    "space": "O(V + E)",
+    "code": "#include <climits>\n#include <functional>\n#include <queue>\n#include <tuple>\n#include <utility>\n#include <vector>\nusing namespace std;\nint countShortestPaths(int n, const vector<tuple<int,int,int>>& roads) {\n    const int MOD = 1000000007;\n    if (n <= 0) return 0;\n    vector<vector<pair<int,int>>> adj(n);\n    for (auto [u,v,time] : roads) {\n        adj[u].push_back({v,time});\n        adj[v].push_back({u,time});\n    }\n    const long long INF = LLONG_MAX / 4;\n    vector<long long> distance(n, INF);\n    vector<int> ways(n, 0);\n    using State = pair<long long,int>;\n    priority_queue<State, vector<State>, greater<State>> pq;\n    distance[0] = 0; ways[0] = 1;\n    pq.push({0,0});\n    while (!pq.empty()) {\n        auto [cost,u] = pq.top(); pq.pop();\n        if (cost != distance[u]) continue;\n        for (auto [v,time] : adj[u]) {\n            long long candidate = cost + time; // roads have positive times\n            if (candidate < distance[v]) {\n                distance[v] = candidate;\n                ways[v] = ways[u];\n                pq.push({candidate,v});\n            } else if (candidate == distance[v]) {\n                ways[v] = (ways[v] + (long long)ways[u]) % MOD;\n            }\n        }\n    }\n    return ways[n - 1];\n}"
+  },
+  "s15-minimum-steps-to-reach-end-from-start-by-perform": {
+    "trick": "Each residue modulo 100000 is a BFS state. Multiply by every allowed number, reduce modulo 100000, and mark each residue once.",
+    "time": "O(100000 · m), m multipliers",
+    "space": "O(100000)",
+    "code": "#include <queue>\n#include <vector>\nusing namespace std;\nint minimumMultiplications(const vector<int>& multipliers,\n                           int start, int target) {\n    const int MOD = 100000;\n    start %= MOD; target %= MOD;\n    vector<int> distance(MOD, -1);\n    queue<int> q;\n    distance[start] = 0;\n    q.push(start);\n    while (!q.empty()) {\n        int value = q.front(); q.pop();\n        if (value == target) return distance[value];\n        for (int factor : multipliers) {\n            int next = (int)((long long)value * factor % MOD);\n            if (distance[next] != -1) continue;\n            distance[next] = distance[value] + 1;\n            q.push(next);\n        }\n    }\n    return -1; // assumes nonnegative start and multipliers\n}"
+  },
+  "s15-bellman-ford-algorithm": {
+    "trick": "Relax every edge up to V−1 times. A further improving relaxation proves a negative cycle reachable from the source.",
+    "time": "O(V · E)",
+    "space": "O(V)",
+    "code": "#include <algorithm>\n#include <climits>\n#include <tuple>\n#include <utility>\n#include <vector>\nusing namespace std;\npair<bool, vector<long long>> bellmanFord(\n    int n, const vector<tuple<int,int,int>>& edges, int source) {\n    const long long INF = LLONG_MAX / 4;\n    vector<long long> distance(n, INF);\n    distance[source] = 0;\n    for (int round = 1; round < n; ++round) {\n        bool changed = false;\n        for (auto [u,v,weight] : edges) {\n            if (distance[u] == INF) continue;\n            if (distance[u] + weight < distance[v]) {\n                distance[v] = distance[u] + weight;\n                changed = true;\n            }\n        }\n        if (!changed) break;\n    }\n    for (auto [u,v,weight] : edges)\n        if (distance[u] != INF && distance[u] + weight < distance[v])\n            return {false, {}}; // reachable negative cycle\n    for (long long& value : distance) if (value == INF) value = -1;\n    return {true, distance};\n}"
+  },
+  "s15-floyd-warshal-algorithm": {
+    "trick": "Try every vertex as an intermediate point. Improve i→j using i→via→j whenever both subpaths exist.",
+    "time": "O(V³)",
+    "space": "O(V²) for the returned matrix",
+    "code": "#include <algorithm>\n#include <climits>\n#include <vector>\nusing namespace std;\nvector<vector<long long>> floydWarshall(const vector<vector<int>>& matrix) {\n    int n = (int)matrix.size();\n    const long long INF = LLONG_MAX / 4;\n    vector<vector<long long>> dist(n, vector<long long>(n, INF));\n    for (int i = 0; i < n; ++i)\n        for (int j = 0; j < n; ++j)\n            if (i == j) dist[i][j] = 0;\n            else if (matrix[i][j] != -1) dist[i][j] = matrix[i][j];\n    for (int via = 0; via < n; ++via)\n        for (int i = 0; i < n; ++i)\n            for (int j = 0; j < n; ++j)\n                if (dist[i][via] != INF && dist[via][j] != INF)\n                    dist[i][j] = min(dist[i][j],\n                                     dist[i][via] + dist[via][j]);\n    for (auto& row : dist)\n        for (long long& value : row)\n            if (value == INF) value = -1;\n    return dist; // assumes no negative cycle\n}"
+  },
+  "s15-find-the-city-with-the-smallest-number-of-neighb": {
+    "trick": "Run Floyd-Warshall for all-pairs distances, count neighbors within the threshold, and prefer the larger city index on ties.",
+    "time": "O(V³ + E)",
+    "space": "O(V²)",
+    "code": "#include <algorithm>\n#include <climits>\n#include <tuple>\n#include <vector>\nusing namespace std;\nint findTheCity(int n, const vector<tuple<int,int,int>>& edges,\n                int threshold) {\n    const long long INF = LLONG_MAX / 4;\n    vector<vector<long long>> dist(n, vector<long long>(n, INF));\n    for (int i = 0; i < n; ++i) dist[i][i] = 0;\n    for (auto [u,v,weight] : edges) {\n        dist[u][v] = min(dist[u][v], (long long)weight);\n        dist[v][u] = min(dist[v][u], (long long)weight);\n    }\n    for (int via = 0; via < n; ++via)\n        for (int i = 0; i < n; ++i)\n            for (int j = 0; j < n; ++j)\n                if (dist[i][via] != INF && dist[via][j] != INF)\n                    dist[i][j] = min(dist[i][j],\n                                     dist[i][via] + dist[via][j]);\n    int bestCity = -1, fewest = n + 1;\n    for (int city = 0; city < n; ++city) {\n        int reachable = 0;\n        for (int other = 0; other < n; ++other)\n            if (other != city && dist[city][other] <= threshold) ++reachable;\n        if (reachable <= fewest) { // <= intentionally picks higher index\n            fewest = reachable;\n            bestCity = city;\n        }\n    }\n    return bestCity;\n}"
+  }
+}
