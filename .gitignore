@@ -1,0 +1,14 @@
+# personal account data — saved logged-in pages, exported progress
+personal/
+
+# the notes PDF stays local; the public repository does not redistribute it
+*.pdf
+
+# source snapshots, parsed data, and build scripts stay local
+reference/
+
+# index.html, the spreadsheet, and CSV are deliberately committed
+
+# local scratch
+.DS_Store
+venv/
