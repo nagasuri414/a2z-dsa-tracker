@@ -331,7 +331,27 @@
     .goal-kpis{grid-template-columns:repeat(2,minmax(112px,1fr))}
   }
   @media(max-width:520px){.quote-banner{flex-wrap:wrap}.quote-copy{flex-basis:calc(100% - 60px)}
-    .quote-next{margin-left:auto}}
+    .quote-next{margin-left:auto}
+    .sub{padding:0 10px 8px}
+    .sub table,.sub tbody{display:block;width:100%}
+    .sub tr.p{display:grid;grid-template-columns:28px minmax(0,1fr) auto;
+      grid-template-areas:"check name name" ". links actions";
+      column-gap:10px;row-gap:8px;padding:12px 4px;border-top:1px solid var(--line-soft)}
+    .sub tr.p td{display:block;width:auto;padding:0;border:0;min-width:0}
+    .sub tr.p td.chk{grid-area:check;padding-top:3px}
+    .sub tr.p td.name{grid-area:name;overflow-wrap:anywhere;line-height:1.4}
+    .sub tr.p td.diff{display:none}
+    .sub tr.p td.links{grid-area:links;text-align:left;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+    .sub tr.p .links a{margin:0;padding:6px 8px;min-height:32px}
+    .sub tr.p td.act{grid-area:actions;display:flex;align-items:center;justify-content:flex-end;gap:2px}
+    .sub tr.p .ico{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center}
+    .sub tr.p .cb{width:24px;height:24px}
+    .sub tr.p .cb:checked::after{left:8px;top:4px}
+    .sub tr.noterow,.sub tr.solutionrow{display:block}
+    .sub tr.noterow td:first-child,.sub tr.solutionrow td:first-child{display:none}
+    .sub tr.noterow td[colspan],.sub tr.solutionrow td[colspan]{display:block;width:100%;padding:10px 4px}
+    .rail{display:none}
+  }
 </style>
 </head>
 <body>
