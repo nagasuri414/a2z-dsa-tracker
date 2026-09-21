@@ -561,9 +561,11 @@ const altLabel = s => ({"InterviewBit":"IB","GeeksForGeeks":"GFG*","SPOJ":"SPOJ"
 /* sub-step titles from the roadmap already start with their own number */
 const subTitle = p => /^\s*\d+\s*[.)]/.test(p.ut || "") ? p.ut : `${p.u}. ${p.ut}`;
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let storageWriteFailed = false, fileWriteFailed = false;
 const ls = {
   get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
-  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} },
+  set(k,v){ try{ localStorage.setItem(k,v); if(k===KEY) storageWriteFailed=false; return true; }
+    catch(e){ if(k===KEY) storageWriteFailed=true; return false; } },
 };
 function showQuote(){
   const key = "a2z-quote-last", previous = Number(ls.get(key));
@@ -749,9 +751,11 @@ async function writeFile(){
     const w = await fileHandle.createWritable();
     await w.write(JSON.stringify(payload(), null, 1));
     await w.close();
+    fileWriteFailed = false;
     state.lastBackup = Date.now(); state.changes = 0;
     ls.set(KEY, JSON.stringify(state));
   }catch(e){
+    fileWriteFailed = true;
     fileHandle = null; fileName = "";
     await idb.del("handle").catch(()=>{});
   }
@@ -768,17 +772,40 @@ async function chooseFile(){
     document.getElementById("offer").classList.add("hidden");
   }catch(e){}
 }
+function progressSignature(s){
+  const items=Object.entries(s.items || {}).sort(([a],[b])=>a.localeCompare(b))
+    .map(([k,value])=>{const v=value||{};return [k,!!v.done,+v.doneAt||null,!!v.revisit,v.note||""];});
+  return JSON.stringify([s.goal?.targetTotal||null,s.goal?.targetDate||null,
+    s.goal?.createdAt||null,s.goal?.baselineDone||0,items]);
+}
 async function reconnect(ask){
   const h = await idb.get("handle").catch(()=>null);
   if(!h || !await perm(h, ask)) return false;
-  fileHandle = h; fileName = h.name;
+  let disk;
   try{
-    const disk = JSON.parse(await (await h.getFile()).text());
-    if(disk && disk.items && Object.keys(disk.items).length > Object.keys(state.items).length){
-      state.items = disk.items; state.goal = disk.goal || state.goal; ls.set(KEY, JSON.stringify(state));
-      repaintAll();
-    }
-  }catch(e){}
+    disk = JSON.parse(await (await h.getFile()).text());
+    if(!disk || !disk.items || typeof disk.items !== "object") throw new Error("Invalid progress file");
+  }catch(e){
+    showModal("Could not read progress file", "<p>Your browser progress is still available. Check the JSON file before reconnecting it.</p>",
+      [{label:"OK", primary:true}]);
+    return true;
+  }
+  const useFile = () => {
+    state=norm({...disk,lastBackup:Date.now(),changes:0});
+    ls.set(KEY,JSON.stringify(state));
+    fileHandle=h; fileName=h.name;
+    repaintAll(); strip();
+  };
+  if(progressSignature(disk)!==progressSignature(state)){
+    if(!Object.keys(state.items).length && !state.goal){ useFile(); return true; }
+    showModal("Two different progress copies",
+      `<p>The browser and <b>${esc(h.name)}</b> contain different tracker progress. Nothing has been replaced.</p>
+       <p class="warn">Download a browser backup first if you are unsure. Choosing one copy will replace the other.</p>`,
+      [{label:"Replace file with browser copy", onClick:()=>{fileHandle=h;fileName=h.name;writeFile();}},
+       {label:"Replace browser with file copy", primary:true, onClick:useFile}]);
+    return true;
+  }
+  fileHandle=h; fileName=h.name;
   strip();
   return true;
 }
@@ -800,6 +827,14 @@ const footprint = () => {
 };
 function strip(){
   const el = document.getElementById("strip"), n = state.changes || 0;
+  if(!fileHandle && (storageWriteFailed || fileWriteFailed)){
+    el.className = "strip stale";
+    el.innerHTML = `<span class="dot"></span><span><b>Saving needs attention.</b> ${storageWriteFailed
+      ? "This browser could not store your progress." : "Writing to your connected file failed."} Download a backup now.</span>
+      <button class="btn btn-quiet" id="sExport">Download backup</button>`;
+    document.getElementById("sExport").onclick = doExport;
+    return;
+  }
   if(fileHandle){
     el.className = "strip";
     el.innerHTML = `<span class="dot"></span><span>Autosaving <b>JSON</b> to <b>${esc(fileName)}</b> · ${footprint()} · saved ${ago(state.lastBackup)}</span>`;
@@ -1703,6 +1738,21 @@ function showModal(title, html, buttons){
 
 /* ---------------- boot ---------------- */
 showQuote(); render(); strip();
+let displayedDay=dateOnly(Date.now());
+function refreshVisibleProgress(){
+  try{
+    const saved=JSON.parse(ls.get(KEY));
+    if(saved?.items && progressSignature(saved)!==progressSignature(state)){
+      state=norm(saved);
+      repaintAll(); strip();
+    }
+  }catch(e){}
+  const today=dateOnly(Date.now());
+  if(today!==displayedDay){ displayedDay=today; renderGoal(); }
+}
+addEventListener("focus", refreshVisibleProgress);
+addEventListener("storage", e=>{if(e.key===KEY) refreshVisibleProgress();});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden) refreshVisibleProgress();});
 (async () => {
   if(!supportsFS) return;
   const had = await idb.get("handle").catch(()=>null);
