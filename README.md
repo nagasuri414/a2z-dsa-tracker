@@ -4,7 +4,7 @@ An unofficial, browser-based practice tracker built around [Striver's A2Z DSA sh
 
 ## Use it
 
-Open `index.html` in a browser, or publish that file with GitHub Pages. Ticks, notes, stars, and goals are stored in that browser; they are **not** saved to GitHub or shared with other users. Use **Data → Download backup (.json)** regularly, and **Restore backup (.json)** when moving to another browser or computer. The Excel and CSV files are standalone sheet exports.
+Open `index.html` in a browser alongside `quotes.js` and `solutions.js`, or publish all three with GitHub Pages. Ticks, notes, stars, and goals are stored in that browser; they are **not** saved to GitHub or shared with other users. Use **Data → Download backup (.json)** regularly, and **Restore backup (.json)** when moving to another browser or computer. The Excel and CSV files are standalone sheet exports.
 
 Before replacing a local download with a new version, download a JSON backup. Browser storage for pages opened directly from the filesystem can vary by browser and file location.
 
@@ -14,4 +14,4 @@ Clicking a problem's name expands a quick summary — step, topic, difficulty, a
 
 ## Repository contents
 
-This repository shares the ready-to-use `index.html`, Excel workbook, and CSV export. The development materials in `reference/`, your personal progress in `personal/`, and the notes PDF remain only on the maintainer's computer. The browser app is self-contained in `index.html`; no build step is needed to use it.
+This repository shares the ready-to-use `index.html`, `quotes.js`, `solutions.js`, 18 editable `solutions/step-XX.json` files, Excel workbook, and CSV export. The browser reads the single generated `solutions.js` file; the step files are its source. After editing a step file, regenerate the master with `python3 reference/scripts/build_solutions.py` on the maintainer's machine. Development materials in `reference/`, personal progress in `personal/`, and the notes PDF remain local. No build step is needed to use the published page.

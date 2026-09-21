@@ -1,0 +1,44 @@
+{
+  "s2-bubble-sort": {
+    "trick": "Repeatedly swap adjacent out-of-order pairs, bubbling the largest unsorted element to the end each pass. Stop early if a pass makes no swaps — the array is already sorted.",
+    "time": "O(n²), O(n) if already sorted",
+    "space": "O(1)",
+    "code": "void bubbleSort(vector<int>& arr) {\n    int n = arr.size();\n    for (int i = n - 1; i > 0; i--) {\n        bool swapped = false;\n        for (int j = 0; j < i; j++) {\n            if (arr[j] > arr[j + 1]) {       // out of order: swap the adjacent pair\n                swap(arr[j], arr[j + 1]);\n                swapped = true;\n            }\n        }\n        if (!swapped) break;                 // no swaps this pass means it's already sorted\n    }\n}"
+  },
+  "s2-insertion-sort": {
+    "trick": "Build the sorted prefix one element at a time: take the next element and shift larger elements right until it finds its spot — like sorting playing cards in your hand.",
+    "time": "O(n²), O(n) if already sorted",
+    "space": "O(1)",
+    "code": "void insertionSort(vector<int>& arr) {\n    int n = arr.size();\n    for (int i = 1; i < n; i++) {\n        int key = arr[i], j = i - 1;\n        while (j >= 0 && arr[j] > key) {     // shift larger elements one step right\n            arr[j + 1] = arr[j];\n            j--;\n        }\n        arr[j + 1] = key;                    // drop key into the gap it opened\n    }\n}"
+  },
+  "s2-merge-sort": {
+    "trick": "Split the array in half recursively until pieces are size 1, then merge sorted halves back together by repeatedly taking the smaller of the two fronts.",
+    "time": "O(n log n)",
+    "space": "O(n)",
+    "code": "void merge(vector<int>& arr, int low, int mid, int high) {\n    vector<int> temp;\n    int left = low, right = mid + 1;\n    while (left <= mid && right <= high) {   // merge two sorted halves into temp\n        if (arr[left] <= arr[right]) temp.push_back(arr[left++]);\n        else temp.push_back(arr[right++]);\n    }\n    while (left <= mid) temp.push_back(arr[left++]);   // copy any leftovers from the left half\n    while (right <= high) temp.push_back(arr[right++]); // ...or the right half\n    for (int i = low; i <= high; i++) arr[i] = temp[i - low];\n}\n\nvoid mergeSort(vector<int>& arr, int low, int high) {\n    if (low >= high) return;                 // zero or one element is already sorted\n    int mid = (low + high) / 2;\n    mergeSort(arr, low, mid);                // sort the left half\n    mergeSort(arr, mid + 1, high);           // sort the right half\n    merge(arr, low, mid, high);              // combine both sorted halves\n}"
+  },
+  "s2-quick-sort": {
+    "trick": "Pick a pivot (the first element here), partition the array so smaller elements end up left of it and larger ones right, then recursively sort each side.",
+    "time": "O(n log n) average, O(n²) worst case",
+    "space": "O(log n) recursion stack",
+    "code": "int partition(vector<int>& arr, int low, int high) {\n    int pivot = arr[low], i = low, j = high;\n    while (i < j) {\n        while (arr[i] <= pivot && i <= high - 1) i++;  // find something > pivot from the left\n        while (arr[j] > pivot && j >= low + 1) j--;    // find something <= pivot from the right\n        if (i < j) swap(arr[i], arr[j]);\n    }\n    swap(arr[low], arr[j]);                  // place the pivot at its final sorted position\n    return j;\n}\n\nvoid quickSort(vector<int>& arr, int low, int high) {\n    if (low < high) {\n        int p = partition(arr, low, high);\n        quickSort(arr, low, p - 1);          // everything left of the pivot\n        quickSort(arr, p + 1, high);         // everything right of the pivot\n    }\n}"
+  },
+  "s2-recursive-bubble-sort": {
+    "trick": "Same idea as bubble sort — one pass bubbles the largest remaining element to the end — but each pass is a recursive call on a shrinking prefix instead of an outer loop.",
+    "time": "O(n²)",
+    "space": "O(n) recursion stack",
+    "code": "void recursiveBubbleSort(vector<int>& arr, int n) {\n    if (n <= 1) return;                      // base case: nothing left to sort\n    for (int j = 0; j < n - 1; j++)\n        if (arr[j] > arr[j + 1]) swap(arr[j], arr[j + 1]);  // bubble the max to the end\n    recursiveBubbleSort(arr, n - 1);          // recurse on the shorter, still-unsorted prefix\n}"
+  },
+  "s2-recursive-insertion-sort": {
+    "trick": "Recursively sort the first n-1 elements first, then insert the nth element into its correct position by shifting larger elements right.",
+    "time": "O(n²)",
+    "space": "O(n) recursion stack",
+    "code": "void recursiveInsertionSort(vector<int>& arr, int n) {\n    if (n <= 1) return;                      // base case: a single element is already sorted\n    recursiveInsertionSort(arr, n - 1);      // first, sort everything before arr[n-1]\n    int last = arr[n - 1], j = n - 2;\n    while (j >= 0 && arr[j] > last) {        // shift larger elements right...\n        arr[j + 1] = arr[j];\n        j--;\n    }\n    arr[j + 1] = last;                       // ...then drop last into the gap\n}"
+  },
+  "s2-selection-sort": {
+    "trick": "Find the minimum in the unsorted part of the array and swap it to the front. Repeat for each position.",
+    "time": "O(n²)",
+    "space": "O(1)",
+    "code": "void selectionSort(vector<int>& arr) {\n    int n = arr.size();\n    for (int i = 0; i < n - 1; i++) {\n        int minIdx = i;\n        for (int j = i + 1; j < n; j++)      // find the minimum in the unsorted suffix\n            if (arr[j] < arr[minIdx]) minIdx = j;\n        swap(arr[i], arr[minIdx]);           // place it at the front of that suffix\n    }\n}"
+  }
+}
