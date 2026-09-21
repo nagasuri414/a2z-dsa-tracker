@@ -10,7 +10,7 @@ Before replacing a local download with a new version, download a JSON backup. Br
 
 The **AI** button opens a ready-made prompt for that problem — intuition, complexity, and C++ code — in whichever assistant you pick from **Ask AI** in the toolbar (ChatGPT, Claude, or Gemini; ChatGPT is the default because it's the only one of the three confirmed to open straight into an answer — Claude and Gemini open the site with the prompt already on your clipboard, ready to paste). This app has no connection to any of them and stores nothing about what you ask.
 
-Clicking a problem's name expands a quick summary — step, topic, difficulty, and your own note. A small, hand-verified set of problems (compiled and cross-checked before being added, listed in the commit history) also show a trick, complexity, and working code directly, no AI needed.
+Clicking a problem's name expands a quick summary — step, topic, difficulty, and your own note. All 456 roadmap items have a quick solution with an approach, time/space complexity, and C++ code. Introductory theory lessons use illustrative C++ examples rather than a judge-specific submission.
 
 ## Repository contents
 
