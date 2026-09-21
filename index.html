@@ -870,9 +870,9 @@ function strip(){
   }
   const stale = n >= 20 || (state.lastBackup && Date.now() - state.lastBackup > 7*864e5);
   el.className = "strip" + (stale ? " stale" : "");
-  el.innerHTML = `<span class="dot"></span><span>Autosaves as <b>JSON</b> in this browser only · ${footprint()} · `
-    + (state.lastBackup ? `last backup ${ago(state.lastBackup)}` : `no backup yet`)
-    + (n ? ` · <b>${n}</b> change${n===1?"":"s"} since` : "") + `</span>`
+  el.innerHTML = `<span class="dot"></span><span><b>Saved</b> automatically to this browser · ${footprint()} · `
+    + (state.lastBackup ? `external backup ${ago(state.lastBackup)}` : `no external backup yet`)
+    + (n ? ` (<b>${n}</b> change${n===1?"":"s"} since)` : "") + `</span>`
     + `<button class="btn btn-quiet" id="sExport">Download backup</button>`
     + (supportsFS && ls.get(DECLINED) ? `<button class="btn btn-quiet" id="sFile">Use a file</button>` : "");
   const a = document.getElementById("sExport"); if(a) a.onclick = doExport;
