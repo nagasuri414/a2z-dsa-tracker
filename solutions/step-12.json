@@ -63,7 +63,7 @@
     "trick": "Give every child one candy. A left-to-right pass satisfies higher ratings than the left neighbor; a right-to-left pass satisfies the right neighbor.",
     "time": "O(n)",
     "space": "O(n)",
-    "code": "// Approach: Give every child one candy. A left-to-right pass satisfies higher ratings than the left\n//   neighbor; a right-to-left pass satisfies the right neighbor.\n#include <algorithm>\n#include <numeric>\n#include <vector>\nusing namespace std;\nlong long candy(const vector<int>& rating) {\n    int n = (int)rating.size();\n    vector<int> sweets(n, 1);\n    for (int i = 1; i < n; ++i)\n        if (rating[i] > rating[i - 1]) sweets[i] = sweets[i - 1] + 1;\n    for (int i = n - 2; i >= 0; --i)\n        if (rating[i] > rating[i + 1])\n            sweets[i] = max(sweets[i], sweets[i + 1] + 1);\n    return accumulate(sweets.begin(), sweets.end(), 0LL);\n}"
+    "code": "// Approach: Give every child one candy. A left-to-right pass satisfies higher ratings than the left\n//   neighbor; a right-to-left pass satisfies the right neighbor.\n#include <algorithm>\n#include <numeric>\n#include <vector>\nusing namespace std;\nlong long candy(const vector<int>& rating) {\n    // Each child needs more candy than a lower-rated neighbor.\n    int n = (int)rating.size();\n    vector<int> sweets(n, 1);\n    for (int i = 1; i < n; ++i)\n        if (rating[i] > rating[i - 1]) sweets[i] = sweets[i - 1] + 1;\n    for (int i = n - 2; i >= 0; --i)\n        if (rating[i] > rating[i + 1])\n            sweets[i] = max(sweets[i], sweets[i + 1] + 1);\n    return accumulate(sweets.begin(), sweets.end(), 0LL);\n}"
   },
   "s12-program-for-shortest-job-first-or-sjf-cpu-schedu": {
     "trick": "When all jobs are ready at time zero, running shorter jobs first minimizes total waiting time. Add each job's start time to the waiting total.",
@@ -87,7 +87,7 @@
     "trick": "Sort intervals by start. The last output interval either absorbs the next overlapping interval or stays separate.",
     "time": "O(n log n)",
     "space": "O(n) output",
-    "code": "// Approach: Sort intervals by start. The last output interval either absorbs the next overlapping\n//   interval or stays separate.\n#include <algorithm>\n#include <vector>\nusing namespace std;\nvector<vector<int>> mergeIntervals(vector<vector<int>> intervals) {\n    sort(intervals.begin(), intervals.end());\n    vector<vector<int>> answer;\n    for (const auto& interval : intervals) {\n        if (answer.empty() || answer.back()[1] < interval[0])\n            answer.push_back(interval);\n        else\n            answer.back()[1] = max(answer.back()[1], interval[1]);\n    }\n    return answer;\n}"
+    "code": "// Approach: Sort intervals by start. The last output interval either absorbs the next overlapping\n//   interval or stays separate.\n#include <algorithm>\n#include <vector>\nusing namespace std;\nvector<vector<int>> mergeIntervals(vector<vector<int>> intervals) {\n    // Sort by start; overlapping intervals can extend the current end.\n    sort(intervals.begin(), intervals.end());\n    vector<vector<int>> answer;\n    for (const auto& interval : intervals) {\n        if (answer.empty() || answer.back()[1] < interval[0])\n            answer.push_back(interval);\n        else\n            answer.back()[1] = max(answer.back()[1], interval[1]);\n    }\n    return answer;\n}"
   },
   "s12-non-overlapping-intervals": {
     "trick": "Sort by ending time and keep each interval that starts at or after the previous chosen end. All skipped intervals must be removed.",

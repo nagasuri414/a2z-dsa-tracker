@@ -3,13 +3,13 @@
     "trick": "Use masks for individual bits: AND tests, OR sets, XOR toggles, and AND with an inverted mask clears. Positions are zero-based.",
     "time": "O(1) per operation",
     "space": "O(1)",
-    "code": "// Approach: Use masks for individual bits: AND tests, OR sets, XOR toggles, and AND with an inverted\n//   mask clears. Positions are zero-based and must be from 0 to 31.\n#include <cstdint>\nusing namespace std;\nbool testBit(uint32_t value, int bit) {\n    return (value & (uint32_t(1) << bit)) != 0;\n}\nuint32_t setBit(uint32_t value, int bit) {\n    return value | (uint32_t(1) << bit);\n}\nuint32_t clearBit(uint32_t value, int bit) {\n    return value & ~(uint32_t(1) << bit);\n}\nuint32_t toggleBit(uint32_t value, int bit) {\n    return value ^ (uint32_t(1) << bit);\n}"
+    "code": "// Approach: Use masks for individual bits: AND tests, OR sets, XOR toggles, and AND with an inverted\n//   mask clears. Positions are zero-based and must be from 0 to 31.\n#include <cstdint>\nusing namespace std;\nbool testBit(uint32_t value, int bit) {\n    // A mask with one set bit selects just the requested position.\n    return (value & (uint32_t(1) << bit)) != 0;\n}\nuint32_t setBit(uint32_t value, int bit) {\n    return value | (uint32_t(1) << bit);\n}\nuint32_t clearBit(uint32_t value, int bit) {\n    return value & ~(uint32_t(1) << bit);\n}\nuint32_t toggleBit(uint32_t value, int bit) {\n    return value ^ (uint32_t(1) << bit);\n}"
   },
   "s8-check-if-the-i-th-bit-is-set-or-not": {
     "trick": "Shift a one to zero-based position i and AND it with the number. Use an unsigned type to avoid signed-shift pitfalls.",
     "time": "O(1)",
     "space": "O(1)",
-    "code": "// Approach: Shift a one to zero-based position i and AND it with the number. Use an unsigned type to\n//   avoid signed-shift pitfalls. The task gives a valid bit index (0 to 31).\n#include <cstdint>\nusing namespace std;\nbool isBitSet(uint32_t value, int i) {\n    return (value & (uint32_t(1) << i)) != 0;\n}"
+    "code": "// Approach: Shift a one to zero-based position i and AND it with the number. Use an unsigned type to\n//   avoid signed-shift pitfalls. The task gives a valid bit index (0 to 31).\n#include <cstdint>\nusing namespace std;\nbool isBitSet(uint32_t value, int i) {\n    // Shift 1 to position i, then AND to test that bit.\n    return (value & (uint32_t(1) << i)) != 0;\n}"
   },
   "s8-check-if-a-number-is-odd-or-not": {
     "trick": "The least significant bit is 1 exactly when an integer is odd.",
@@ -39,7 +39,7 @@
     "trick": "XOR swapping is a bitwise exercise: three XORs exchange values, but the alias check is essential. Prefer std::swap in production code.",
     "time": "O(1)",
     "space": "O(1)",
-    "code": "// Approach: XOR swapping is a bitwise exercise: three XORs exchange values, but the alias check is\n//   essential. Prefer std::swap in production code.\nvoid xorSwap(int& a, int& b) {\n    if (&a == &b) return;\n    a ^= b;\n    b ^= a;\n    a ^= b;\n}"
+    "code": "// Approach: XOR swapping is a bitwise exercise: three XORs exchange values, but the alias check is\n//   essential. Prefer std::swap in production code.\nvoid xorSwap(int& a, int& b) {\n    // If both references name the same variable, XOR would erase its value.\n    if (&a == &b) return;\n    a ^= b;\n    b ^= a;\n    a ^= b;\n}"
   },
   "s8-divide-two-integers-without-using-multiplication": {
     "trick": "Subtract the largest shifted divisor that fits, from high bit to low bit. Compute magnitudes in 64-bit to handle INT_MIN safely.",
@@ -69,7 +69,7 @@
     "trick": "XOR from 0 through n follows a four-value cycle depending on n mod 4. XOR of L..R is prefix(R) XOR prefix(L-1).",
     "time": "O(1)",
     "space": "O(1)",
-    "code": "// Approach: XOR from 0 through n follows a four-value cycle depending on n mod 4. XOR of L..R is\n//   prefix(R) XOR prefix(L-1).\n#include <cstdint>\nusing namespace std;\nuint64_t xorPrefix(uint64_t n) {\n    switch (n & 3ULL) {\n        case 0: return n;\n        case 1: return 1;\n        case 2: return n + 1;\n        default: return 0;\n    }\n}\nuint64_t xorRange(uint64_t left, uint64_t right) {\n    if (left > right) return 0;\n    return xorPrefix(right) ^ (left == 0 ? 0 : xorPrefix(left - 1));\n}"
+    "code": "// Approach: XOR from 0 through n follows a four-value cycle depending on n mod 4. XOR of L..R is\n//   prefix(R) XOR prefix(L-1).\n#include <cstdint>\nusing namespace std;\nuint64_t xorPrefix(uint64_t n) {\n    // Prefix XOR repeats every four numbers, so ranges need only two prefixes.\n    switch (n & 3ULL) {\n        case 0: return n;\n        case 1: return 1;\n        case 2: return n + 1;\n        default: return 0;\n    }\n}\nuint64_t xorRange(uint64_t left, uint64_t right) {\n    if (left > right) return 0;\n    return xorPrefix(right) ^ (left == 0 ? 0 : xorPrefix(left - 1));\n}"
   },
   "s8-find-the-two-numbers-appearing-odd-number-of-tim": {
     "trick": "XOR all values to get a^b. Isolate one bit where a and b differ and XOR the two resulting groups separately.",
@@ -81,25 +81,25 @@
     "trick": "Try divisors only up to the remaining number's square root. Record each prime divisor once, divide out all copies, then append any remaining prime.",
     "time": "O(√n)",
     "space": "O(k) output, k = distinct prime factors",
-    "code": "// Approach: Try divisors only up to the remaining number's square root. Record each prime divisor\n//   once, divide out all copies, then append any remaining prime.\n#include <vector>\nusing namespace std;\nvector<int> distinctPrimeFactors(int n) {\n    vector<int> factors;\n    if (n <= 1) return factors;\n    for (int p = 2; p <= n / p; ++p) {\n        if (n % p != 0) continue;\n        factors.push_back(p);\n        while (n % p == 0) n /= p;\n    }\n    if (n > 1) factors.push_back(n);\n    return factors;\n}"
+    "code": "// Approach: Try divisors only up to the remaining number's square root. Record each prime divisor\n//   once, divide out all copies, then append any remaining prime.\n#include <vector>\nusing namespace std;\nvector<int> distinctPrimeFactors(int n) {\n    // After dividing by a factor, keep dividing until it no longer fits.\n    vector<int> factors;\n    if (n <= 1) return factors;\n    for (int p = 2; p <= n / p; ++p) {\n        if (n % p != 0) continue;\n        factors.push_back(p);\n        while (n % p == 0) n /= p;\n    }\n    if (n > 1) factors.push_back(n);\n    return factors;\n}"
   },
   "s8-all-divisors-of-a-number": {
     "trick": "Each divisor d up to sqrt(n) pairs with n/d. Avoid duplicating the square root, then sort the answer.",
     "time": "O(√n + d log d), d = number of divisors",
     "space": "O(d) output",
-    "code": "// Approach: Each divisor d up to sqrt(n) pairs with n/d. Avoid duplicating the square root, then sort\n//   the answer.\n#include <algorithm>\n#include <vector>\nusing namespace std;\nvector<int> allDivisors(int n) {\n    vector<int> answer;\n    if (n <= 0) return answer;\n    for (int d = 1; d <= n / d; ++d) {\n        if (n % d != 0) continue;\n        answer.push_back(d);\n        if (d != n / d) answer.push_back(n / d);\n    }\n    sort(answer.begin(), answer.end());\n    return answer;\n}"
+    "code": "// Approach: Each divisor d up to sqrt(n) pairs with n/d. Avoid duplicating the square root, then sort\n//   the answer.\n#include <algorithm>\n#include <vector>\nusing namespace std;\nvector<int> allDivisors(int n) {\n    // Each divisor below the square root gives a paired divisor above it.\n    vector<int> answer;\n    if (n <= 0) return answer;\n    for (int d = 1; d <= n / d; ++d) {\n        if (n % d != 0) continue;\n        answer.push_back(d);\n        if (d != n / d) answer.push_back(n / d);\n    }\n    sort(answer.begin(), answer.end());\n    return answer;\n}"
   },
   "s8-sieve-of-eratosthenes": {
     "trick": "Start with all numbers at least 2 marked prime. For each prime p up to sqrt(n), mark its multiples starting at p².",
     "time": "O(n log log n)",
     "space": "O(n)",
-    "code": "// Approach: Start with all numbers at least 2 marked prime. For each prime p up to sqrt(n), mark its\n//   multiples starting at p².\n#include <vector>\nusing namespace std;\nvector<int> primesUpTo(int n) {\n    if (n < 2) return {};\n    vector<char> prime(n + 1, true);\n    prime[0] = prime[1] = false;\n    for (int p = 2; p <= n / p; ++p) {\n        if (!prime[p]) continue;\n        for (long long multiple = 1LL * p * p; multiple <= n; multiple += p)\n            prime[multiple] = false;\n    }\n    vector<int> answer;\n    for (int value = 2; value <= n; ++value)\n        if (prime[value]) answer.push_back(value);\n    return answer;\n}"
+    "code": "// Approach: Start with all numbers at least 2 marked prime. For each prime p up to sqrt(n), mark its\n//   multiples starting at p².\n#include <vector>\nusing namespace std;\nvector<int> primesUpTo(int n) {\n    // When p is prime, mark its multiples starting at p*p.\n    if (n < 2) return {};\n    vector<char> prime(n + 1, true);\n    prime[0] = prime[1] = false;\n    for (int p = 2; p <= n / p; ++p) {\n        if (!prime[p]) continue;\n        for (long long multiple = 1LL * p * p; multiple <= n; multiple += p)\n            prime[multiple] = false;\n    }\n    vector<int> answer;\n    for (int value = 2; value <= n; ++value)\n        if (prime[value]) answer.push_back(value);\n    return answer;\n}"
   },
   "s8-find-prime-factorisation-of-a-number-using-sieve": {
     "trick": "Precompute the smallest prime factor (SPF) of every value up to n. Repeatedly divide by SPF[n] to list prime factors with multiplicity.",
     "time": "O(n log log n) preprocessing, O(log n) factorization",
     "space": "O(n) SPF table plus output",
-    "code": "// Approach: Precompute the smallest prime factor (SPF) of every value up to n. Repeatedly divide by\n//   SPF[n] to list prime factors with multiplicity.\n#include <vector>\nusing namespace std;\nvector<int> primeFactorsWithSieve(int n) {\n    if (n <= 1) return {};\n    vector<int> spf(n + 1);\n    for (int i = 2; i <= n; ++i) spf[i] = i;\n    for (int p = 2; p <= n / p; ++p) {\n        if (spf[p] != p) continue;\n        for (long long multiple = 1LL * p * p; multiple <= n; multiple += p)\n            if (spf[multiple] == multiple) spf[multiple] = p;\n    }\n    vector<int> factors;\n    while (n > 1) {\n        factors.push_back(spf[n]);\n        n /= spf[n];\n    }\n    return factors;\n}"
+    "code": "// Approach: Precompute the smallest prime factor (SPF) of every value up to n. Repeatedly divide by\n//   SPF[n] to list prime factors with multiplicity.\n#include <vector>\nusing namespace std;\nvector<int> primeFactorsWithSieve(int n) {\n    // Store each number's smallest prime factor for quick repeated division.\n    if (n <= 1) return {};\n    vector<int> spf(n + 1);\n    for (int i = 2; i <= n; ++i) spf[i] = i;\n    for (int p = 2; p <= n / p; ++p) {\n        if (spf[p] != p) continue;\n        for (long long multiple = 1LL * p * p; multiple <= n; multiple += p)\n            if (spf[multiple] == multiple) spf[multiple] = p;\n    }\n    vector<int> factors;\n    while (n > 1) {\n        factors.push_back(spf[n]);\n        n /= spf[n];\n    }\n    return factors;\n}"
   },
   "s8-power-n-x": {
     "trick": "Use binary exponentiation: multiply the answer for each set bit of the nonnegative exponent, squaring the base after every bit.",
