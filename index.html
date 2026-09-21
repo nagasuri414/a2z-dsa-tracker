@@ -251,8 +251,8 @@
   .links a:hover{color:var(--accent);border-color:var(--accent)}
   .links a.alt{color:var(--alt);border-color:color-mix(in srgb,var(--alt) 32%,transparent)}
   .links a.sug{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 32%,transparent)}
-  .links a.pdf{color:var(--easy);border-color:color-mix(in srgb,var(--easy) 34%,transparent)}
-  .links a.pdf:hover{color:var(--easy);border-color:var(--easy)}
+  .links a.ai{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 34%,transparent)}
+  .links a.ai:hover{color:var(--accent);border-color:var(--accent)}
   td.act{width:62px;text-align:right;white-space:nowrap}
   .ico{background:none;border:0;padding:3px;cursor:pointer;color:var(--faint);line-height:0;
     border-radius:6px;transition:color .12s,background .12s}
@@ -416,7 +416,7 @@
 
   <footer>
     Spine: takeuforward.org A2Z roadmap, cross-checked against a2zdsa.pages.dev and codolio.<br>
-    <b style="color:var(--easy)">SOL</b> opens the solutions PDF at that problem's page ·
+    <b style="color:var(--accent)">AI</b> opens a live ChatGPT conversation about that problem (also copies the prompt to your clipboard) ·
     <b style="color:var(--alt)">IB · SPOJ · CN360</b> = no LeetCode version exists ·
     <b style="color:var(--warn)">LC?</b> = LeetCode link suggested by another source, not in the official sheet
   </footer>
@@ -432,10 +432,18 @@
 </div>
 
 <script>
-/* Where the solutions PDF lives, relative to this page. Change this one line if you
-   rename or move the file. Page anchors (#page=N) work in Chrome, Edge and Firefox;
-   Safari's PDF viewer ignores them and opens at page 1. */
-const PDF_FILE = "Striver A2Z Full Notes - all approaches included, Prepared by Vinay kajla IG- Vinay.Kajla_.pdf";
+/* "Ask AI" opens a real ChatGPT conversation for this problem via its ?q= parameter,
+   verified to auto-submit an actual message rather than just prefill an empty box
+   (tested directly: the query lands as a real user turn in the conversation, not
+   sitting unsent in the composer). That behaviour is undocumented and unofficial, so
+   the prompt is also copied to the clipboard on click as a silent fallback — if the
+   auto-submit ever stops working, the prompt is already there to paste. Nothing is
+   sent anywhere except the one request the browser makes when the link is opened. */
+function aiPrompt(p){
+  const topic = p.t || p.ut || p.st;
+  return `Explain the optimal approach for the DSA problem "${p.n}" (topic: ${topic}, difficulty: ${DIFF[p.d]}). Give the intuition, a step-by-step approach from brute force to optimal, time and space complexity, and clean commented code in Python, C++, and Java. Mention common edge cases.`;
+}
+function aiLink(p){ return "https://chatgpt.com/?q=" + encodeURIComponent(aiPrompt(p)); }
 
 // Verified excerpts only. URLs are retained here for provenance, but are not shown in the UI.
 // Keep the wording faithful to the linked work; do not add unattributed sayings here.
@@ -877,7 +885,7 @@ function rowHTML(p){
   let links = ORDER.filter(k => p.l[k]).map(k =>
     `<a href="${esc(p.l[k])}" target="_blank" rel="noopener noreferrer">${k}</a>`).join("");
   if(p.alt) links += `<a class="alt" href="${esc(p.alt)}" target="_blank" rel="noopener noreferrer" title="No LeetCode version — ${esc(p.altsrc)}">${esc(altLabel(p.altsrc))}</a>`;
-  if(p.pg) links += `<a class="pdf" href="${esc(PDF_FILE)}#page=${p.pg}" target="_blank" rel="noopener noreferrer" title="Open the solutions PDF at page ${p.pg}">SOL</a>`;
+  links += `<a class="ai" href="${esc(aiLink(p))}" target="_blank" rel="noopener noreferrer" data-ai-prompt="${esc(aiPrompt(p))}" title="Ask ChatGPT to explain this problem (prompt is also copied to your clipboard)">AI</a>`;
   if(p.sug) links += `<a class="sug" href="${esc(p.sug)}" target="_blank" rel="noopener noreferrer" title="Not in the official sheet — suggested by ${esc(p.sugsrc)}">LC?</a>`;
   return `<tr class="p" data-k="${esc(p.k)}">
     <td class="chk"><input type="checkbox" class="cb" data-act="done" aria-label="Solved"></td>
@@ -913,6 +921,13 @@ document.getElementById("list").addEventListener("click", e => {
   else if(act === "revisit"){ const s = get(k); s.revisit = !s.revisit; }
   else if(act === "note"){ toggleNote(tr, k); return; }
   save(true); paint(tr); stats(); applyFilters();
+});
+document.getElementById("list").addEventListener("click", e => {
+  // best-effort clipboard copy, invoked in the same click so it stays inside the user
+  // gesture; failures (denied permission, no API) are silently ignored — the real
+  // ChatGPT link still opens regardless, this is only the fallback for pasting.
+  const a = e.target.closest("a.ai");
+  if(a && a.dataset.aiPrompt && navigator.clipboard) navigator.clipboard.writeText(a.dataset.aiPrompt).catch(() => {});
 });
 function toggleNote(tr, k){
   const nxt = tr.nextElementSibling;

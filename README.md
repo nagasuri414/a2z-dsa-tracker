@@ -8,7 +8,7 @@ Open `index.html` in a browser, or publish that file with GitHub Pages. Ticks, n
 
 Before replacing a local download with a new version, download a JSON backup. Browser storage for pages opened directly from the filesystem can vary by browser and file location.
 
-The **SOL** buttons contain exact page numbers for notes prepared by Vinay Kajla. The PDF is not included here, so those buttons will not work on GitHub Pages yet. Obtain the notes from [Vinay Kajla's own share](https://www.linkedin.com/posts/vinaykajla_since-replying-to-more-than-38k-comments-activity-7430210749173506048-P6UG); do not assume this repository hosts or licenses the PDF.
+The **AI** button opens a live ChatGPT conversation with a ready-made prompt for that problem — intuition, complexity, and code in three languages. It works if you already have ChatGPT open in your browser; the prompt is also copied to your clipboard as a fallback, and can be pasted into any other assistant. This app has no connection to OpenAI and stores nothing about what you ask.
 
 ## Repository contents
 
