@@ -273,6 +273,7 @@
     stroke-linecap:round;stroke-linejoin:round}
   .ico.on{color:var(--warn)} .ico.on svg{fill:currentColor}
   .ico.noted{color:var(--accent)}
+  .ico.sol{color:var(--easy)}
   .cb{appearance:none;-webkit-appearance:none;width:17px;height:17px;border:1.6px solid var(--line);
     border-radius:5px;cursor:pointer;margin:0;position:relative;transition:all .14s;
     background:var(--surface-2);vertical-align:middle}
@@ -451,7 +452,8 @@
     Spine: takeuforward.org A2Z roadmap, cross-checked against a2zdsa.pages.dev and codolio.<br>
     <b style="color:var(--accent)">AI</b> opens a conversation about that problem in your chosen assistant — pick ChatGPT, Claude, or Gemini from "Ask AI" above — and also copies the prompt to your clipboard ·
     <b style="color:var(--alt)">IB · SPOJ · CN360</b> = no LeetCode version exists ·
-    <b style="color:var(--warn)">LC?</b> = LeetCode link suggested by another source, not in the official sheet
+    <b style="color:var(--warn)">LC?</b> = LeetCode link suggested by another source, not in the official sheet ·
+    A green <code style="color:var(--easy)">&lt;/&gt;</code> icon means that problem has a hand-verified trick, complexity, and code — click it to show them; it stays hidden until you do
   </footer>
 </div>
 
@@ -847,6 +849,7 @@ document.getElementById("quoteNext").onclick = showQuote;
 const ICON = {
   star:'<svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.5 6 .9-4.35 4.25 1.03 6-5.38-2.83L6.62 19.65l1.03-6L3.3 9.4l6-.9z"/></svg>',
   note:'<svg viewBox="0 0 24 24"><path d="M4 4h11l5 5v11a0 0 0 010 0H4z"/><path d="M15 4v5h5M8 13h8M8 17h5"/></svg>',
+  code:'<svg viewBox="0 0 24 24"><path d="M9 18l-6-6 6-6M15 6l6 6-6 6"/></svg>',
 };
 
 /* ---------------- state ---------------- */
@@ -1155,6 +1158,7 @@ function rowHTML(p){
     <td class="act">
       <button class="ico" data-act="revisit" title="Star for revision">${ICON.star}</button>
       <button class="ico" data-act="note" title="Notes">${ICON.note}</button>
+      ${CODE[p.k] ? `<button class="ico sol" data-act="solution" title="Show verified solution">${ICON.code}</button>` : ""}
     </td></tr>`;
 }
 function paint(tr){
@@ -1183,6 +1187,7 @@ document.getElementById("list").addEventListener("click", e => {
   }
   else if(act === "revisit"){ const s = get(k); s.revisit = !s.revisit; }
   else if(act === "note" || act === "summary"){ toggleNote(tr, k); return; }
+  else if(act === "solution"){ toggleSolution(tr, k); return; }
   save(true); paint(tr); stats(); applyFilters();
 });
 document.getElementById("list").addEventListener("click", e => {
@@ -1192,28 +1197,42 @@ document.getElementById("list").addEventListener("click", e => {
   const a = e.target.closest("a.ai");
   if(a && a.dataset.aiPrompt && navigator.clipboard) navigator.clipboard.writeText(a.dataset.aiPrompt).catch(() => {});
 });
+/* Note/summary and solution are two independent panels that can each be open or
+   closed on their own. Note always sits directly under the row; solution sits under
+   that if both are open, or directly under the row if note is closed - whichever
+   order they were opened in, they settle into the same stacking. */
 function toggleNote(tr, k){
   const nxt = tr.nextElementSibling;
   if(nxt && nxt.classList.contains("noterow")){ nxt.remove(); return; }
   const p = BY_KEY.get(k);
-  const snip = CODE[k];
-  const codeNote = snip ? `<div class="code-note">
-      <div class="trick">${esc(snip.trick)}</div>
-      <div class="complexity">Time: <b>${esc(snip.time)}</b> · Space: <b>${esc(snip.space)}</b></div>
-      <pre>${esc(snip.code)}</pre>
-    </div>` : "";
   const row = document.createElement("tr");
   row.className = "noterow";
   row.innerHTML = `<td></td><td colspan="4">
     <div class="quick-summary">${esc(p.st.replace(/^Step \d+:\s*/, ""))} · ${esc(p.t || subTitle(p))} ·
       <b style="color:${DCOL[p.d]}">${DIFF[p.d]}</b></div>
-    ${codeNote}
     <textarea class="note" placeholder="Approach, complexity, what tripped you up…"></textarea></td>`;
   tr.after(row);
   const ta = row.querySelector("textarea");
   ta.value = (state.items[k] || {}).note || "";
   ta.focus();
   ta.addEventListener("input", () => { get(k).note = ta.value; save(true); paint(tr); });
+}
+function toggleSolution(tr, k){
+  const snip = CODE[k];
+  if(!snip) return;
+  let after = tr;
+  if(after.nextElementSibling && after.nextElementSibling.classList.contains("noterow"))
+    after = after.nextElementSibling;
+  const nxt = after.nextElementSibling;
+  if(nxt && nxt.classList.contains("solutionrow")){ nxt.remove(); return; }
+  const row = document.createElement("tr");
+  row.className = "solutionrow";
+  row.innerHTML = `<td></td><td colspan="4"><div class="code-note">
+      <div class="trick">${esc(snip.trick)}</div>
+      <div class="complexity">Time: <b>${esc(snip.time)}</b> · Space: <b>${esc(snip.space)}</b></div>
+      <pre>${esc(snip.code)}</pre>
+    </div></td>`;
+  after.after(row);
 }
 
 function stats(){
