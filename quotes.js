@@ -24,6 +24,29 @@ const TRACKER_CONTENT = {
     { text: "Trust thyself: every heart vibrates to that iron string.", credit: "Ralph Waldo Emerson · Essay: Self-Reliance", url: "https://www.gutenberg.org/cache/epub/2944/pg2944-images.html" },
     { text: "What I cannot create, I do not understand.", credit: "Richard Feynman · Person", url: "https://magazine.caltech.edu/post/biology-through-the-eyes-of-a-physicist" },
     { text: "It is hard to fail, but it is worse never to have tried to succeed.", credit: "Theodore Roosevelt · Person", url: "https://www.theodorerooseveltcenter.org/quote/it-is-hard-to-fail-but-it-is-worse-never-to-have-tried-to-succeed-in-this-life-we-get-nothing-save-by-effort/" },
+    // Monkeytype trial picks from:
+    // https://github.com/monkeytypegame/monkeytype/blob/master/frontend/static/quotes/english.json
+    // IDs preserve provenance for review; these are not claims of speaker-level verification.
+    { text: "You must take life the way it comes at you and make the best of it.", credit: "Book: Life of Pi", monkeytypeId: 6 },
+    { text: "There are darknesses in life, and there are lights; you are one of the lights.", credit: "Book: Dracula", monkeytypeId: 14, url: "https://www.gutenberg.org/files/345/345-h/345-h" },
+    { text: "If you only do what you can do, you will never be more than who you are now.", credit: "Movie: Kung Fu Panda", monkeytypeId: 16 },
+    { text: "Courage is resistance to fear, mastery of fear—not absence of fear.", credit: "Mark Twain · Book: Pudd’nhead Wilson", monkeytypeId: 36, url: "https://quoteinvestigator.com/2019/11/26/courage-fear/" },
+    { text: "If you want a happy ending, that depends, of course, on where you stop your story.", credit: "Show: White Collar", monkeytypeId: 844 },
+    { text: "When do I know I'm Spider-Man? You won't. That's all it is Miles. A leap of faith.", credit: "Movie: Spider-Man: Into the Spider-Verse", monkeytypeId: 5737 },
+    { text: "There is nothing wrong with letting the people who love you help you.", credit: "Show: Avatar: The Last Airbender", monkeytypeId: 5396 },
+    { text: "Your story may not have such a happy beginning, but that doesn't make you who you are.", credit: "Movie: Kung Fu Panda 2", monkeytypeId: 7696 },
+    { text: "Life moves forward. No matter how much it hurts. It has to.", credit: "Show: Doctor Who", monkeytypeId: 7643 },
+    { text: "There is a stubbornness about me that never can bear to be frightened at the will of others. My courage always rises with every attempt to intimidate me.", credit: "Book: Pride and Prejudice", monkeytypeId: 2898, url: "https://www.gutenberg.org/files/1342/1342-h/1342-h.htm" },
+    { text: "I must learn to brook being happier than I deserve.", credit: "Captain Wentworth · Book: Persuasion", monkeytypeId: 3533, url: "https://www.gutenberg.org/files/105/old/105-h/105-h.htm" },
+    { text: "And the point is, to live everything. Live the questions now.", credit: "Book: Letters to a Young Poet", monkeytypeId: 3324 },
+    { text: "He's learning some things, all by himself, and hopefully learning to ask for help when he needs it.", credit: "Show: The Good Place", monkeytypeId: 6277 },
+    { text: "The storm passed through us and around us. It's gone, but we remain.", credit: "Book: Dune", monkeytypeId: 6509 },
+    { text: "The past can hurt. But the way I see it, you can either run from it... or learn from it.", credit: "Movie: The Lion King", monkeytypeId: 3917 },
+    { text: "No matter how bad things are, you can always make things worse. At the same time, it is often within your power to make them better.", credit: "Book: The Last Lecture", monkeytypeId: 1052 },
+    { text: "But that parting needs not last forever. Whether a parting be forever or merely for a short while... that is up to you.", credit: "Game: The Legend of Zelda: Majora's Mask", monkeytypeId: 845 },
+    { text: "There must be quite a few things a hot bath won't cure, but I don't know many of them.", credit: "Book: The Bell Jar", monkeytypeId: 839 },
+    { text: "When you meet someone better than yourself, turn your thoughts to becoming his equal.", credit: "Book: The Analects", monkeytypeId: 840 },
+    { text: "The world is indeed full of peril, and in it there are many dark places; but still there is much that is fair...", credit: "Book: The Fellowship of the Ring", monkeytypeId: 1357 },
   ],
   humor: [
     // Selected from the user's examples. These are not all independently attributable.
