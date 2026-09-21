@@ -256,9 +256,19 @@
   .code-note .trick{color:var(--text);font-size:13px;line-height:1.55;margin-bottom:6px}
   .code-note .complexity{color:var(--muted);font-size:12px;margin-bottom:8px}
   .code-note .complexity b{color:var(--text)}
+  .code-box{position:relative}
   .code-note pre{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);
-    padding:10px 12px;overflow-x:auto;margin:0;
+    padding:10px 34px 10px 12px;overflow-x:auto;margin:0;
     font:12.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--text)}
+  .code-note pre.wrap{white-space:pre-wrap;overflow-wrap:anywhere;overflow-x:visible}
+  .wrap-toggle{position:absolute;top:8px;right:8px;width:24px;height:24px;display:flex;
+    align-items:center;justify-content:center;border-radius:6px;border:1px solid var(--line);
+    background:var(--surface);color:var(--faint);cursor:pointer;opacity:.8;
+    transition:opacity .12s,color .12s,border-color .12s,background .12s}
+  .wrap-toggle:hover{opacity:1;color:var(--accent);border-color:var(--accent)}
+  .wrap-toggle.on{opacity:1;color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}
+  .wrap-toggle svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;
+    stroke-linecap:round;stroke-linejoin:round}
   .tag{color:var(--faint);font-size:11.5px;display:block;margin-top:1px}
   .new{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
     color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);
@@ -339,7 +349,6 @@
     td.links{width:auto;white-space:normal}
     .links a{margin:3px 0 0 4px;padding:2px 5px}
     .goal-kpis{grid-template-columns:repeat(2,minmax(112px,1fr))}
-    .code-note pre{white-space:pre-wrap;overflow-wrap:anywhere;overflow-x:visible}
   }
   @media(max-width:520px){.quote-banner{flex-wrap:wrap}.quote-copy{flex-basis:calc(100% - 60px)}
     .quote-next{margin-left:auto}
@@ -593,7 +602,8 @@ const ICON = {
 /* ---------------- state ---------------- */
 let state = load(), fileHandle = null, fileName = "", writeTimer = null,
     goalEditing = false, activityDate = "",
-    reportCollapsed = ls.get(KEY + "-report-collapsed") !== "0";
+    reportCollapsed = ls.get(KEY + "-report-collapsed") !== "0",
+    codeWrap = ls.get(KEY + "-code-wrap") === "1";
 
 function blank(){
   return {schema:SCHEMA, items:{}, goal:null, lastBackup:null, changes:0};
@@ -970,10 +980,28 @@ function toggleSolution(tr, k){
   row.innerHTML = `<td></td><td colspan="4"><div class="code-note">
       <div class="trick">${esc(snip.trick)}</div>
       <div class="complexity">Time: <b>${esc(snip.time)}</b> · Space: <b>${esc(snip.space)}</b></div>
-      <pre>${esc(snip.code)}</pre>
+      <div class="code-box">
+        <button class="wrap-toggle${codeWrap?" on":""}" data-wrap-btn type="button"
+          title="${codeWrap?"Turn off line wrap":"Wrap long lines"}" aria-pressed="${codeWrap}">
+          <svg viewBox="0 0 24 24"><path d="M4 7h13a3 3 0 010 6H9m0 0l3-3m-3 3l3 3M4 17h9"/></svg>
+        </button>
+        <pre class="${codeWrap?"wrap":""}">${esc(snip.code)}</pre>
+      </div>
     </div></td>`;
   after.after(row);
 }
+document.getElementById("list").addEventListener("click", e => {
+  const btn = e.target.closest('[data-wrap-btn]');
+  if(!btn) return;
+  codeWrap = !codeWrap;
+  ls.set(KEY + "-code-wrap", codeWrap ? "1" : "0");
+  document.querySelectorAll(".wrap-toggle").forEach(b => {
+    b.classList.toggle("on", codeWrap);
+    b.setAttribute("aria-pressed", codeWrap);
+    b.title = codeWrap ? "Turn off line wrap" : "Wrap long lines";
+  });
+  document.querySelectorAll(".code-note pre").forEach(pre => pre.classList.toggle("wrap", codeWrap));
+});
 
 function stats(){
   const total = DATA.length;
