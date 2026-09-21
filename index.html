@@ -519,7 +519,7 @@
 </div>
 
 <script src="quotes.js?v=1"></script>
-<script src="solutions.js?v=1790009173"></script>
+<script src="solutions.js?v=1790011769"></script>
 <script>
 /* "Ask AI" opens a real ChatGPT conversation for this problem via its ?q= parameter,
    verified to auto-submit an actual message rather than just prefill an empty box
@@ -1497,7 +1497,58 @@ function sheetXml(rows, o = {}){
     ? `<sheetView showGridLines="${o.grid === false ? 0 : 1}" workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A2" sqref="A2"/></sheetView>`
     : `<sheetView showGridLines="${o.grid === false ? 0 : 1}" workbookViewId="0"/>`;
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetViews>${view}</sheetViews><sheetFormatPr defaultRowHeight="15"/>${cols}<sheetData>${data}</sheetData>${o.cf || ""}${o.tableRef || ""}</worksheet>`;
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetViews>${view}</sheetViews><sheetFormatPr defaultRowHeight="15"/>${cols}<sheetData>${data}</sheetData>${o.cf || ""}${o.drawing || ""}${o.tableRef || ""}</worksheet>`;
+}
+/* A minimal but valid chart part: one clustered bar series per value column,
+   with every point's value baked into a numCache so it renders correctly
+   before Excel/LibreOffice/Sheets ever recalculates anything - same reasoning
+   as every formula elsewhere in this file carrying a cached value. */
+function barChartXml(title, catRef, cats, seriesList){
+  const n = cats.length;
+  const cache = (ref, vals, isStr) => `<c:${isStr?"str":"num"}Ref><c:f>${xe(ref)}</c:f><c:${isStr?"str":"num"}Cache>${isStr?"":"<c:formatCode>General</c:formatCode>"}<c:ptCount val="${vals.length}"/>${
+    vals.map((v,i)=>`<c:pt idx="${i}"><c:v>${xe(v)}</c:v></c:pt>`).join("")
+  }</c:${isStr?"str":"num"}Cache></c:${isStr?"str":"num"}Ref>`;
+  const series = seriesList.map((s, idx) => `<c:ser>
+    <c:idx val="${idx}"/><c:order val="${idx}"/>
+    <c:tx>${cache(s.nameRef, [s.name], true)}</c:tx>
+    <c:cat>${cache(catRef, cats, true)}</c:cat>
+    <c:val>${cache(s.ref, s.values, false)}</c:val>
+  </c:ser>`).join("");
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<c:chart>
+<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>${xe(title)}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title>
+<c:autoTitleDeleted val="0"/>
+<c:plotArea><c:layout/>
+<c:barChart>
+<c:barDir val="col"/><c:grouping val="clustered"/><c:varyColors val="0"/>
+${series}
+<c:axId val="111111111"/><c:axId val="222222222"/>
+</c:barChart>
+<c:catAx><c:axId val="111111111"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="b"/><c:crossAx val="222222222"/></c:catAx>
+<c:valAx><c:axId val="222222222"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="l"/><c:crossAx val="111111111"/></c:valAx>
+</c:plotArea>
+<c:legend><c:legendPos val="b"/></c:legend>
+<c:plotVisOnly val="1"/>
+</c:chart>
+</c:chartSpace>`;
+}
+function chartAnchorXml(fromCol, fromRow, toCol, toRow){
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<xdr:twoCellAnchor>
+<xdr:from><xdr:col>${fromCol}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${fromRow}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>
+<xdr:to><xdr:col>${toCol}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${toRow}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to>
+<xdr:graphicFrame macro="">
+<xdr:nvGraphicFramePr><xdr:cNvPr id="2" name="Progress chart"/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr>
+<xdr:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></xdr:xfrm>
+<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart">
+<c:chart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId1"/>
+</a:graphicData></a:graphic>
+</xdr:graphicFrame>
+<xdr:clientData/>
+</xdr:twoCellAnchor>
+</xdr:wsDr>`;
 }
 
 function buildWorkbook(){
@@ -1506,7 +1557,8 @@ function buildWorkbook(){
                 "Trick","Time","Space","Solution code","ID (do not edit)"];
   const LINKS = ["LC","GFG","CN","YT","BLOG","TUF"];
   const S = {head:1, txt:0, num:2, mid:3, link:4, wrap:5,
-             t1:6, t2:7, kpi:8, kpiBig:9, pct:10, lbl:11, hdr2:12, tot:13, totPct:14};
+             t1:6, t2:7, kpi:8, kpiBig:9, pct:10, lbl:11, hdr2:12, tot:13, totPct:14,
+             editMid:15, editWrap:16};
 
   /* ---- Progress sheet ---- */
   const rows = [HEAD.map(h => ({t:h, s:S.head}))];
@@ -1526,10 +1578,10 @@ function buildWorkbook(){
     rows.push([
       {t:i+1, s:S.num}, {t:p.s, s:S.num}, p.st, {t:p.u, s:S.num}, p.ut, p.n,
       {t:dn, s:S.mid}, p.t || "",
-      {t:st.done ? "Done" : "Not started", s:S.mid},
-      {t:st.doneAt ? dateOnly(st.doneAt) : "", s:S.mid},
-      {t:st.revisit ? "Yes" : "", s:S.mid},
-      {t:st.note || "", s:S.wrap},
+      {t:st.done ? "Done" : "Not started", s:S.editMid},
+      {t:st.doneAt ? dateOnly(st.doneAt) : "", s:S.editMid},
+      {t:st.revisit ? "Yes" : "", s:S.editMid},
+      {t:st.note || "", s:S.editWrap},
       ...LINKS.map(k => link(p.l[k], k)),
       CODE[p.k] ? {t:CODE[p.k].trick, s:S.wrap} : "",
       CODE[p.k] ? {t:CODE[p.k].time, s:S.mid} : "",
@@ -1582,6 +1634,7 @@ function buildWorkbook(){
   sum.push([{t:"Step", s:S.hdr2},{t:"Title", s:S.hdr2},{t:"Total", s:S.hdr2},
             {t:"Solved", s:S.hdr2},{t:"Left", s:S.hdr2},{t:"Complete", s:S.hdr2}]);
   const first = sum.length + 1;
+  const stepCats = [], stepTotals = [], stepSolved = [];
   [...perStep.keys()].sort((a,b) => a-b).forEach(s => {
     const r = sum.length + 1, v = perStep.get(s);
     sum.push([{t:s, s:S.num}, v.title,
@@ -1589,6 +1642,7 @@ function buildWorkbook(){
       {f:`COUNTIFS(${SB},A${r},${ST},"Done")`, v:v.done, s:S.num},
       {f:`C${r}-D${r}`, v:v.total - v.done, s:S.num},
       {f:`IFERROR(D${r}/C${r},0)`, v: v.total ? v.done/v.total : 0, s:S.pct}]);
+    stepCats.push(s); stepTotals.push(v.total); stepSolved.push(v.done);
   });
   const lastStep = sum.length, totRow = sum.length + 1;
   sum.push([{t:"", s:S.tot}, {t:"All steps", s:S.tot},
@@ -1597,7 +1651,16 @@ function buildWorkbook(){
     {f:`SUM(E${first}:E${lastStep})`, v:left, s:S.tot},
     {f:`IFERROR(D${totRow}/C${totRow},0)`, v: total ? done/total : 0, s:S.totPct}]);
   sum[4][1] = {f:`B6-B4`, v:left, s:S.kpiBig};   // Remaining = Total - Solved
-  const summary = sheetXml(sum, {widths:[15,46,11,11,11,12], grid:false});
+  sum.push([]);
+  sum.push([{t:"Editing in Excel", s:S.t2}]);
+  sum.push([{t:"On the Progress sheet, the yellow columns (Status, Date solved, Starred, Notes) are the ones read back in - fill those in, then use Upload Excel on the tracker to sync. Everything else there (links, trick, complexity, code, the ID column) is reference only and any edits to it are ignored on upload.", s:S.lbl}]);
+  const chart1 = barChartXml("Solved vs total, by step", "Summary!$A$" + first + ":$A$" + lastStep,
+    stepCats, [
+      {name:"Total", nameRef:`Summary!$C$${stepHdr}`, ref:`Summary!$C$${first}:$C$${lastStep}`, values:stepTotals},
+      {name:"Solved", nameRef:`Summary!$D$${stepHdr}`, ref:`Summary!$D$${first}:$D$${lastStep}`, values:stepSolved},
+    ]);
+  const drawing1 = chartAnchorXml(7, 2, 15, 24);
+  const summary = sheetXml(sum, {widths:[15,46,11,11,11,12], grid:false, drawing:'<drawing r:id="rId1"/>'});
 
   const tableCols = HEAD.map((h, i) => `<tableColumn id="${i+1}" name="${xe(h)}"/>`).join("");
   const table = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -1618,17 +1681,18 @@ function buildWorkbook(){
 <font><sz val="11"/><color rgb="FF5A6272"/>${F}</font>
 <font><b/><sz val="11"/><color theme="1"/>${F}</font>
 </fonts>
-<fills count="5">
+<fills count="6">
 <fill><patternFill patternType="none"/></fill>
 <fill><patternFill patternType="gray125"/></fill>
 <fill><patternFill patternType="solid"><fgColor rgb="FF1F3864"/><bgColor indexed="64"/></patternFill></fill>
 <fill><patternFill patternType="solid"><fgColor rgb="FFEEF2F9"/><bgColor indexed="64"/></patternFill></fill>
 <fill><patternFill patternType="solid"><fgColor rgb="FFDCE5F2"/><bgColor indexed="64"/></patternFill></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FFFFF2CC"/><bgColor indexed="64"/></patternFill></fill>
 </fills>
 <borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>
 <border><left/><right/><top style="thin"><color rgb="FFBFC7D6"/></top><bottom/><diagonal/></border></borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-<cellXfs count="15">
+<cellXfs count="17">
 <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="center"/></xf>
 <xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
 <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
@@ -1644,6 +1708,8 @@ function buildWorkbook(){
 <xf numFmtId="0" fontId="8" fillId="3" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
 <xf numFmtId="0" fontId="8" fillId="4" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
 <xf numFmtId="164" fontId="8" fillId="4" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="0" fontId="0" fillId="5" borderId="0" xfId="0" applyFill="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="0" fontId="0" fillId="5" borderId="0" xfId="0" applyFill="1" applyAlignment="1"><alignment wrapText="1" vertical="top"/></xf>
 </cellXfs>
 <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
 <dxfs count="5">
@@ -1657,7 +1723,7 @@ function buildWorkbook(){
 </styleSheet>`;
 
   const ct = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/tables/table1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`;
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/tables/table1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/><Override PartName="/xl/charts/chart1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawingml.chart+xml"/></Types>`;
 
   return zipStore([
     {name:"[Content_Types].xml", xml:ct},
@@ -1669,10 +1735,16 @@ function buildWorkbook(){
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`},
     {name:"xl/worksheets/sheet1.xml", xml:summary},
     {name:"xl/worksheets/sheet2.xml", xml:progress},
+    {name:"xl/worksheets/_rels/sheet1.xml.rels", xml:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/></Relationships>`},
     {name:"xl/worksheets/_rels/sheet2.xml.rels", xml:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/table" Target="../tables/table1.xml"/></Relationships>`},
     {name:"xl/tables/table1.xml", xml:table},
     {name:"xl/styles.xml", xml:styles},
+    {name:"xl/drawings/drawing1.xml", xml:drawing1},
+    {name:"xl/drawings/_rels/drawing1.xml.rels", xml:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart1.xml"/></Relationships>`},
+    {name:"xl/charts/chart1.xml", xml:chart1},
   ]);
 }
 function downloadXlsx(){
