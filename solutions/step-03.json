@@ -1,242 +1,242 @@
 {
   "s3-check-if-the-array-is-sorted": {
-    "trick": "Sorted means every element is ≥ the one before it. One pass, bail out at the first drop.",
+    "trick": "The sheet asks whether the array is nondecreasing. The linked LeetCode variant also allows one rotation, so both checks are shown.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "bool isSorted(vector<int>& arr) {\n    for (size_t i = 1; i < arr.size(); i++)\n        if (arr[i] < arr[i - 1]) return false;  // found a drop -> not sorted\n    return true;\n}"
+    "code": "#include <vector>\nusing namespace std;\nbool isSorted(const vector<int>& values) {\n    for (int i = 1; i < (int)values.size(); ++i)\n        if (values[i] < values[i - 1]) return false;\n    return true;\n}\nbool isSortedAndRotated(const vector<int>& values) {\n    int n = (int)values.size(), drops = 0;\n    for (int i = 0; i < n; ++i)\n        if (values[i] > values[(i + 1) % n]) ++drops;\n    return drops <= 1; // includes the unrotated case\n}"
   },
   "s3-find-missing-number-in-an-array": {
-    "trick": "Numbers 1..n should sum to n(n+1)/2. Whatever's short in the actual sum is the missing number.",
+    "trick": "For the linked LeetCode task, XOR 0 through n with the array of n values; paired values cancel. A separate helper covers the 1-through-n lesson variant.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "int findMissingNumber(vector<int>& arr, int n) {\n    long long expectedSum = (long long)n * (n + 1) / 2;  // sum of 1..n\n    long long actualSum = 0;\n    for (int x : arr) actualSum += x;\n    return (int)(expectedSum - actualSum);                // the gap is the missing number\n}"
+    "code": "#include <vector>\nusing namespace std;\nint missingNumberZeroToN(const vector<int>& values) {\n    int missing = (int)values.size();\n    for (int i = 0; i < (int)values.size(); ++i)\n        missing ^= i ^ values[i];\n    return missing; // LeetCode: n values from 0..n\n}\nint missingNumberOneToN(const vector<int>& values, int n) {\n    int missing = 0;\n    for (int value = 1; value <= n; ++value) missing ^= value;\n    for (int value : values) missing ^= value;\n    return missing; // lesson variant: n-1 values from 1..n\n}"
   },
   "s3-find-the-number-that-appears-once-and-other-numb": {
     "trick": "XOR cancels each paired value, leaving the unpaired value.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "int singleNumber(const vector<int>& arr) {\n    int answer = 0;\n    for (int value : arr) answer ^= value;  // x ^ x == 0, so every pair cancels out\n    return answer;                          // only the unpaired value survives\n}"
+    "code": "#include <utility>\n#include <vector>\nusing namespace std;\nint singleNumber(const vector<int>& arr) {\n    int answer = 0;\n    for (int value : arr) answer ^= value;  // x ^ x == 0, so every pair cancels out\n    return answer;                          // only the unpaired value survives\n}"
   },
   "s3-kadane-s-algorithm-maximum-subarray-sum": {
     "trick": "Extend the running sum while it helps; the moment it goes negative it can only drag future sums down, so reset to 0. Track the best sum seen at any point — even a single (negative) element counts.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "long long maxSubArraySum(vector<int>& arr) {\n    long long best = LLONG_MIN, current = 0;\n    for (int x : arr) {\n        current += x;\n        best = max(best, current);    // track the best sum seen anywhere\n        if (current < 0) current = 0; // a negative running sum only hurts what follows\n    }\n    return best;\n}"
+    "code": "#include <algorithm>\n#include <climits>\n#include <vector>\nusing namespace std;\nlong long maxSubArraySum(vector<int>& arr) {\n    long long best = LLONG_MIN, current = 0;\n    for (int x : arr) {\n        current += x;\n        best = max(best, current);    // track the best sum seen anywhere\n        if (current < 0) current = 0; // a negative running sum only hurts what follows\n    }\n    return best;\n}"
   },
   "s3-largest-element-in-an-array": {
     "trick": "Keep the largest value seen while scanning once.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "int largest(const vector<int>& arr) {\n    if (arr.empty()) throw invalid_argument(\"array must be nonempty\");\n    int best = arr[0];\n    for (int value : arr) best = max(best, value);  // keep the biggest value seen so far\n    return best;\n}"
+    "code": "#include <algorithm>\n#include <stdexcept>\n#include <vector>\nusing namespace std;\nint largest(const vector<int>& arr) {\n    if (arr.empty()) throw invalid_argument(\"array must be nonempty\");\n    int best = arr[0];\n    for (int value : arr) best = max(best, value);  // keep the biggest value seen so far\n    return best;\n}"
   },
   "s3-left-rotate-an-array-by-d-places": {
-    "trick": "Reduce d modulo n, then reverse the first d, remaining n-d, and whole array.",
+    "trick": "Three reversals rotate left by d in place. The linked LeetCode task rotates right, so a right-rotation helper is also included.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "void rotateLeft(vector<int>& arr, int d) {\n    int n = static_cast<int>(arr.size());\n    if (n == 0) return;\n    d = (d % n + n) % n;                     // normalize d into [0, n), even if d is negative\n    reverse(arr.begin(), arr.begin() + d);   // reverse the first d elements\n    reverse(arr.begin() + d, arr.end());     // reverse the remaining n-d elements\n    reverse(arr.begin(), arr.end());          // reverse the whole thing -> net left rotation\n}"
+    "code": "#include <algorithm>\n#include <vector>\nusing namespace std;\nvoid rotateLeft(vector<int>& values, int d) {\n    int n = (int)values.size();\n    if (n == 0) return;\n    d = (d % n + n) % n;\n    reverse(values.begin(), values.begin() + d);\n    reverse(values.begin() + d, values.end());\n    reverse(values.begin(), values.end());\n}\nvoid rotateRight(vector<int>& values, int k) {\n    int n = (int)values.size();\n    if (n == 0) return;\n    k = (k % n + n) % n;\n    reverse(values.begin(), values.end());\n    reverse(values.begin(), values.begin() + k);\n    reverse(values.begin() + k, values.end());\n}"
   },
   "s3-left-rotate-an-array-by-one-place": {
-    "trick": "Save the first element, shift the rest left, then place the saved element at the end.",
+    "trick": "Save the first element, shift left, and append it. The linked LeetCode page rotates right; a one-place right variant is included too.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "void rotateLeftOne(vector<int>& arr) {\n    if (arr.empty()) return;\n    int first = arr[0];                        // save the element about to be overwritten\n    for (size_t i = 1; i < arr.size(); ++i) arr[i - 1] = arr[i];  // shift everything left by one\n    arr.back() = first;                         // the saved first element wraps to the end\n}"
+    "code": "#include <vector>\nusing namespace std;\nvoid rotateLeftOne(vector<int>& values) {\n    if (values.empty()) return;\n    int first = values[0];\n    for (int i = 1; i < (int)values.size(); ++i)\n        values[i - 1] = values[i];\n    values.back() = first;\n}\nvoid rotateRightOne(vector<int>& values) {\n    if (values.empty()) return;\n    int last = values.back();\n    for (int i = (int)values.size() - 1; i > 0; --i)\n        values[i] = values[i - 1];\n    values[0] = last;\n}"
   },
   "s3-maximum-consecutive-ones": {
     "trick": "Grow the current run for a one; reset it at a zero, tracking the maximum.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "int maxConsecutiveOnes(const vector<int>& bits) {\n    int run = 0, best = 0;\n    for (int bit : bits) {\n        run = bit == 1 ? run + 1 : 0;  // extend the run on a 1, reset to 0 on a 0\n        best = max(best, run);\n    }\n    return best;\n}"
+    "code": "#include <algorithm>\n#include <vector>\nusing namespace std;\nint maxConsecutiveOnes(const vector<int>& bits) {\n    int run = 0, best = 0;\n    for (int bit : bits) {\n        run = bit == 1 ? run + 1 : 0;  // extend the run on a 1, reset to 0 on a 0\n        best = max(best, run);\n    }\n    return best;\n}"
   },
   "s3-move-zeros-to-end": {
     "trick": "Copy nonzero values forward in their original order, then fill the suffix with zeros.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "void moveZeros(vector<int>& arr) {\n    size_t write = 0;\n    for (int value : arr)\n        if (value != 0) arr[write++] = value;   // pack non-zero values to the front, in order\n    while (write < arr.size()) arr[write++] = 0; // fill whatever's left with zeros\n}"
+    "code": "#include <cstddef>\n#include <vector>\nusing namespace std;\nvoid moveZeros(vector<int>& arr) {\n    size_t write = 0;\n    for (int value : arr)\n        if (value != 0) arr[write++] = value;   // pack non-zero values to the front, in order\n    while (write < arr.size()) arr[write++] = 0; // fill whatever's left with zeros\n}"
   },
   "s3-remove-duplicates-from-sorted-array": {
     "trick": "Write each value that differs from the last kept value into the next free prefix position.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "int removeDuplicates(vector<int>& arr) {\n    int write = 0;\n    for (int value : arr)\n        if (write == 0 || value != arr[write - 1])  // keep it only if it differs from the last kept value\n            arr[write++] = value;\n    return write; // unique values occupy arr[0..write-1]\n}"
+    "code": "#include <vector>\nusing namespace std;\nint removeDuplicates(vector<int>& arr) {\n    int write = 0;\n    for (int value : arr)\n        if (write == 0 || value != arr[write - 1])  // keep it only if it differs from the last kept value\n            arr[write++] = value;\n    return write; // unique values occupy arr[0..write-1]\n}"
   },
   "s3-second-largest-element-in-an-array-without-sorti": {
-    "trick": "Track the largest and second-largest in one pass. When a new largest appears, the old largest demotes to second. Skip values equal to the current largest so duplicates of the max don't count as a second.",
+    "trick": "Track the largest and the strictly smaller runner-up. Use a found flag so INT_MIN remains a valid answer.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "int secondLargest(vector<int>& arr) {\n    int largest = INT_MIN, second = INT_MIN;\n    for (int x : arr) {\n        if (x > largest) {\n            second = largest;       // old largest demotes to second\n            largest = x;\n        } else if (x > second && x < largest) {\n            second = x;              // beats second, but isn't a duplicate of largest\n        }\n    }\n    return second == INT_MIN ? -1 : second;  // -1 means no second-largest exists\n}"
+    "code": "#include <climits>\n#include <vector>\nusing namespace std;\nint secondLargest(const vector<int>& values) {\n    int largest = INT_MIN, second = INT_MIN;\n    bool hasLargest = false, hasSecond = false;\n    for (int value : values) {\n        if (!hasLargest || value > largest) {\n            if (hasLargest) { second = largest; hasSecond = true; }\n            largest = value;\n            hasLargest = true;\n        } else if (value < largest && (!hasSecond || value > second)) {\n            second = value;\n            hasSecond = true;\n        }\n    }\n    return hasSecond ? second : -1;\n}"
   },
   "s3-linear-search": {
     "trick": "Scan left to right and return the first matching index; if none matches, return -1.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "int linearSearch(const vector<int>& a, int target) {\n    for (int i = 0; i < static_cast<int>(a.size()); ++i)\n        if (a[i] == target) return i;\n    return -1;\n}"
+    "code": "#include <vector>\nusing namespace std;\nint linearSearch(const vector<int>& a, int target) {\n    for (int i = 0; i < static_cast<int>(a.size()); ++i)\n        if (a[i] == target) return i;\n    return -1;\n}"
   },
   "s3-find-the-union": {
     "trick": "Merge the two sorted arrays with two pointers, adding a value only if it differs from the last output.",
     "time": "O(n + m)",
     "space": "O(n + m) output",
-    "code": "vector<int> sortedUnion(const vector<int>& a, const vector<int>& b) {\n    vector<int> out;\n    size_t i = 0, j = 0;\n    while (i < a.size() || j < b.size()) {\n        int value;\n        if (j == b.size() || (i < a.size() && a[i] <= b[j]))\n            value = a[i++];\n        else\n            value = b[j++];\n        if (out.empty() || out.back() != value) out.push_back(value);\n    }\n    return out;\n}"
+    "code": "#include <cstddef>\n#include <vector>\nusing namespace std;\nvector<int> sortedUnion(const vector<int>& a, const vector<int>& b) {\n    vector<int> out;\n    size_t i = 0, j = 0;\n    while (i < a.size() || j < b.size()) {\n        int value;\n        if (j == b.size() || (i < a.size() && a[i] <= b[j]))\n            value = a[i++];\n        else\n            value = b[j++];\n        if (out.empty() || out.back() != value) out.push_back(value);\n    }\n    return out;\n}"
   },
   "s3-longest-subarray-with-given-sum-k-positives": {
     "trick": "For nonnegative values, expand the right end and shrink the left end while the sum exceeds k.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "int longestSumKNonnegative(const vector<int>& a, long long k) {\n    if (k < 0) return 0;\n    long long sum = 0;\n    int left = 0, best = 0;\n    for (int right = 0; right < static_cast<int>(a.size()); ++right) {\n        sum += a[right];\n        while (left <= right && sum > k) sum -= a[left++];\n        if (sum == k) best = max(best, right - left + 1);\n    }\n    return best;\n}"
+    "code": "#include <algorithm>\n#include <vector>\nusing namespace std;\nint longestSumKNonnegative(const vector<int>& a, long long k) {\n    if (k < 0) return 0;\n    long long sum = 0;\n    int left = 0, best = 0;\n    for (int right = 0; right < static_cast<int>(a.size()); ++right) {\n        sum += a[right];\n        while (left <= right && sum > k) sum -= a[left++];\n        if (sum == k) best = max(best, right - left + 1);\n    }\n    return best;\n}"
   },
   "s3-longest-subarray-with-sum-k-positives-negatives": {
     "trick": "Store the earliest index of each prefix sum; a previous prefix of current-k gives a sum-k subarray.",
     "time": "O(n) expected",
     "space": "O(n)",
-    "code": "int longestSumKAnyIntegers(const vector<int>& a, long long k) {\n    unordered_map<long long, int> first{{0, -1}};\n    long long prefix = 0;\n    int best = 0;\n    for (int i = 0; i < static_cast<int>(a.size()); ++i) {\n        prefix += a[i];\n        auto it = first.find(prefix - k);\n        if (it != first.end()) best = max(best, i - it->second);\n        first.emplace(prefix, i); // keep the earliest index\n    }\n    return best;\n}"
+    "code": "#include <algorithm>\n#include <unordered_map>\n#include <vector>\nusing namespace std;\nint longestSumKAnyIntegers(const vector<int>& a, long long k) {\n    unordered_map<long long, int> first{{0, -1}};\n    long long prefix = 0;\n    int best = 0;\n    for (int i = 0; i < static_cast<int>(a.size()); ++i) {\n        prefix += a[i];\n        auto it = first.find(prefix - k);\n        if (it != first.end()) best = max(best, i - it->second);\n        first.emplace(prefix, i); // keep the earliest index\n    }\n    return best;\n}"
   },
   "s3-2sum-problem": {
     "trick": "Before storing the current value, look up target-value among earlier values.",
     "time": "O(n) expected",
     "space": "O(n)",
-    "code": "vector<int> twoSumIndices(const vector<int>& a, int target) {\n    unordered_map<int, int> seen;\n    for (int i = 0; i < static_cast<int>(a.size()); ++i) {\n        long long need = static_cast<long long>(target) - a[i];\n        if (need >= INT_MIN && need <= INT_MAX) {\n            auto it = seen.find(static_cast<int>(need));\n            if (it != seen.end()) return {it->second, i};\n        }\n        seen.emplace(a[i], i);\n    }\n    return {}; // no pair\n}"
+    "code": "#include <climits>\n#include <unordered_map>\n#include <utility>\n#include <vector>\nusing namespace std;\nvector<int> twoSumIndices(const vector<int>& a, int target) {\n    unordered_map<int, int> seen;\n    for (int i = 0; i < static_cast<int>(a.size()); ++i) {\n        long long need = static_cast<long long>(target) - a[i];\n        if (need >= INT_MIN && need <= INT_MAX) {\n            auto it = seen.find(static_cast<int>(need));\n            if (it != seen.end()) return {it->second, i};\n        }\n        seen.emplace(a[i], i);\n    }\n    return {}; // no pair\n}"
   },
   "s3-sort-an-array-of-0-s-1-s-and-2-s": {
     "trick": "Dutch national flag: [0,low) are zeros, [low,mid) ones, and (high,n) twos.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "void sort012(vector<int>& a) {\n    int low = 0, mid = 0, high = static_cast<int>(a.size()) - 1;\n    while (mid <= high) {\n        if (a[mid] == 0) swap(a[low++], a[mid++]);\n        else if (a[mid] == 1) ++mid;\n        else swap(a[mid], a[high--]); // inspect swapped-in value next\n    }\n}"
+    "code": "#include <algorithm>\n#include <vector>\nusing namespace std;\nvoid sort012(vector<int>& a) {\n    int low = 0, mid = 0, high = static_cast<int>(a.size()) - 1;\n    while (mid <= high) {\n        if (a[mid] == 0) swap(a[low++], a[mid++]);\n        else if (a[mid] == 1) ++mid;\n        else swap(a[mid], a[high--]); // inspect swapped-in value next\n    }\n}"
   },
   "s3-majority-element-n-2-times": {
     "trick": "Boyer-Moore cancels different values in pairs; verify the surviving candidate if majority is not guaranteed.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "optional<int> majorityOverHalf(const vector<int>& a) {\n    int candidate = 0, balance = 0;\n    for (int x : a) {\n        if (balance == 0) candidate = x;\n        balance += (x == candidate ? 1 : -1);\n    }\n    if (a.empty()) return nullopt;\n    int count = 0;\n    for (int x : a) if (x == candidate) ++count;\n    return count > static_cast<int>(a.size()) / 2\n        ? optional<int>(candidate) : nullopt;\n}"
+    "code": "#include <optional>\n#include <vector>\nusing namespace std;\noptional<int> majorityOverHalf(const vector<int>& a) {\n    int candidate = 0, balance = 0;\n    for (int x : a) {\n        if (balance == 0) candidate = x;\n        balance += (x == candidate ? 1 : -1);\n    }\n    if (a.empty()) return nullopt;\n    int count = 0;\n    for (int x : a) if (x == candidate) ++count;\n    return count > static_cast<int>(a.size()) / 2\n        ? optional<int>(candidate) : nullopt;\n}"
   },
   "s3-print-subarray-with-maximum-subarray-sum-extende": {
-    "trick": "Kadane's algorithm tracks where the current run began; save its endpoints whenever the best sum improves.",
+    "trick": "Kadane's algorithm tracks the best sum and its endpoints. The linked GFG page asks a different adjacent-pair problem.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "tuple<long long, int, int> maxSumSubarray(const vector<int>& a) {\n    if (a.empty()) return {0, -1, -1};\n    long long running = 0, best = LLONG_MIN;\n    int start = 0, bestLeft = 0, bestRight = 0;\n    for (int i = 0; i < static_cast<int>(a.size()); ++i) {\n        if (running <= 0) { running = a[i]; start = i; }\n        else running += a[i];\n        if (running > best) {\n            best = running;\n            bestLeft = start;\n            bestRight = i;\n        }\n    }\n    return {best, bestLeft, bestRight};\n}"
+    "code": "#include <climits>\n#include <tuple>\n#include <vector>\nusing namespace std;\ntuple<long long, int, int> maxSumSubarray(const vector<int>& a) {\n    if (a.empty()) return {0, -1, -1};\n    long long running = 0, best = LLONG_MIN;\n    int start = 0, bestLeft = 0, bestRight = 0;\n    for (int i = 0; i < static_cast<int>(a.size()); ++i) {\n        if (running <= 0) { running = a[i]; start = i; }\n        else running += a[i];\n        if (running > best) {\n            best = running;\n            bestLeft = start;\n            bestRight = i;\n        }\n    }\n    return {best, bestLeft, bestRight};\n}"
   },
   "s3-stock-buy-and-sell": {
     "trick": "Track the cheapest earlier price; selling today earns price-minimumSoFar.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "int maxSingleTradeProfit(const vector<int>& prices) {\n    int cheapest = INT_MAX, best = 0;\n    for (int price : prices) {\n        cheapest = min(cheapest, price);\n        best = max(best, price - cheapest);\n    }\n    return best;\n}"
+    "code": "#include <algorithm>\n#include <climits>\n#include <vector>\nusing namespace std;\nint maxSingleTradeProfit(const vector<int>& prices) {\n    int cheapest = INT_MAX, best = 0;\n    for (int price : prices) {\n        cheapest = min(cheapest, price);\n        best = max(best, price - cheapest);\n    }\n    return best;\n}"
   },
   "s3-rearrange-the-array-in-alternating-positive-and-": {
     "trick": "Place positives at even indices and negatives at odd indices to preserve order; append surplus values.",
     "time": "O(n)",
     "space": "O(n)",
-    "code": "vector<int> alternateSigns(const vector<int>& a) {\n    vector<int> positive, negative, out;\n    for (int x : a) (x >= 0 ? positive : negative).push_back(x);\n    size_t p = 0, n = 0;\n    while (p < positive.size() && n < negative.size()) {\n        out.push_back(positive[p++]);\n        out.push_back(negative[n++]);\n    }\n    while (p < positive.size()) out.push_back(positive[p++]);\n    while (n < negative.size()) out.push_back(negative[n++]);\n    return out;\n}"
+    "code": "#include <cstddef>\n#include <vector>\nusing namespace std;\nvector<int> alternateSigns(const vector<int>& a) {\n    vector<int> positive, negative, out;\n    for (int x : a) (x >= 0 ? positive : negative).push_back(x);\n    size_t p = 0, n = 0;\n    while (p < positive.size() && n < negative.size()) {\n        out.push_back(positive[p++]);\n        out.push_back(negative[n++]);\n    }\n    while (p < positive.size()) out.push_back(positive[p++]);\n    while (n < negative.size()) out.push_back(negative[n++]);\n    return out;\n}"
   },
   "s3-next-permutation": {
     "trick": "Find the rightmost ascent, swap its smaller element with the next larger suffix value, then reverse the suffix.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "void nextPermutationInPlace(vector<int>& a) {\n    int n = static_cast<int>(a.size());\n    if (n < 2) return;\n    int pivot = n - 2;\n    while (pivot >= 0 && a[pivot] >= a[pivot + 1]) --pivot;\n    if (pivot >= 0) {\n        int j = n - 1;\n        while (a[j] <= a[pivot]) --j;\n        swap(a[pivot], a[j]);\n    }\n    reverse(a.begin() + pivot + 1, a.end());\n}"
+    "code": "#include <algorithm>\n#include <vector>\nusing namespace std;\nvoid nextPermutationInPlace(vector<int>& a) {\n    int n = static_cast<int>(a.size());\n    if (n < 2) return;\n    int pivot = n - 2;\n    while (pivot >= 0 && a[pivot] >= a[pivot + 1]) --pivot;\n    if (pivot >= 0) {\n        int j = n - 1;\n        while (a[j] <= a[pivot]) --j;\n        swap(a[pivot], a[j]);\n    }\n    reverse(a.begin() + pivot + 1, a.end());\n}"
   },
   "s3-leaders-in-an-array-problem": {
     "trick": "Scan from right to left; a value is a leader if it is at least as large as every value to its right.",
     "time": "O(n)",
     "space": "O(n) output",
-    "code": "vector<int> leaders(const vector<int>& a) {\n    vector<int> out;\n    int greatestRight = INT_MIN;\n    for (int i = static_cast<int>(a.size()) - 1; i >= 0; --i) {\n        if (a[i] >= greatestRight) out.push_back(a[i]);\n        greatestRight = max(greatestRight, a[i]);\n    }\n    reverse(out.begin(), out.end());\n    return out;\n}"
+    "code": "#include <algorithm>\n#include <climits>\n#include <vector>\nusing namespace std;\nvector<int> leaders(const vector<int>& a) {\n    vector<int> out;\n    int greatestRight = INT_MIN;\n    for (int i = static_cast<int>(a.size()) - 1; i >= 0; --i) {\n        if (a[i] >= greatestRight) out.push_back(a[i]);\n        greatestRight = max(greatestRight, a[i]);\n    }\n    reverse(out.begin(), out.end());\n    return out;\n}"
   },
   "s3-longest-consecutive-sequence-in-an-array": {
     "trick": "Start counting only at numbers whose predecessor is absent, then walk each consecutive run once.",
     "time": "O(n) expected",
     "space": "O(n)",
-    "code": "int longestConsecutive(const vector<int>& a) {\n    unordered_set<int> values(a.begin(), a.end());\n    int best = 0;\n    for (int x : values) {\n        if (x != INT_MIN && values.count(x - 1)) continue;\n        int length = 1, current = x;\n        while (current != INT_MAX && values.count(current + 1)) {\n            ++current;\n            ++length;\n        }\n        best = max(best, length);\n    }\n    return best;\n}"
+    "code": "#include <algorithm>\n#include <climits>\n#include <unordered_set>\n#include <vector>\nusing namespace std;\nint longestConsecutive(const vector<int>& a) {\n    unordered_set<int> values(a.begin(), a.end());\n    int best = 0;\n    for (int x : values) {\n        if (x != INT_MIN && values.count(x - 1)) continue;\n        int length = 1, current = x;\n        while (current != INT_MAX && values.count(current + 1)) {\n            ++current;\n            ++length;\n        }\n        best = max(best, length);\n    }\n    return best;\n}"
   },
   "s3-set-matrix-zeros": {
     "trick": "Use the first row and column as markers, remembering separately whether the first column originally had a zero.",
     "time": "O(rows × cols)",
     "space": "O(1)",
-    "code": "void setMatrixZeroes(vector<vector<int>>& a) {\n    if (a.empty() || a[0].empty()) return;\n    int rows = a.size(), cols = a[0].size();\n    bool firstColZero = false;\n    for (int r = 0; r < rows; ++r) {\n        if (a[r][0] == 0) firstColZero = true;\n        for (int c = 1; c < cols; ++c)\n            if (a[r][c] == 0) a[r][0] = a[0][c] = 0;\n    }\n    for (int r = rows - 1; r >= 0; --r) {\n        for (int c = cols - 1; c >= 1; --c)\n            if (a[r][0] == 0 || a[0][c] == 0) a[r][c] = 0;\n        if (firstColZero) a[r][0] = 0;\n    }\n}"
+    "code": "#include <vector>\nusing namespace std;\nvoid setMatrixZeroes(vector<vector<int>>& a) {\n    if (a.empty() || a[0].empty()) return;\n    int rows = a.size(), cols = a[0].size();\n    bool firstColZero = false;\n    for (int r = 0; r < rows; ++r) {\n        if (a[r][0] == 0) firstColZero = true;\n        for (int c = 1; c < cols; ++c)\n            if (a[r][c] == 0) a[r][0] = a[0][c] = 0;\n    }\n    for (int r = rows - 1; r >= 0; --r) {\n        for (int c = cols - 1; c >= 1; --c)\n            if (a[r][0] == 0 || a[0][c] == 0) a[r][c] = 0;\n        if (firstColZero) a[r][0] = 0;\n    }\n}"
   },
   "s3-rotate-matrix-by-90-degrees": {
     "trick": "For a square matrix, transpose across the diagonal, then reverse every row.",
     "time": "O(n²)",
     "space": "O(1)",
-    "code": "void rotateClockwise90(vector<vector<int>>& a) {\n    int n = a.size();\n    for (int r = 0; r < n; ++r)\n        for (int c = r + 1; c < n; ++c)\n            swap(a[r][c], a[c][r]);\n    for (auto& row : a) reverse(row.begin(), row.end());\n}"
+    "code": "#include <algorithm>\n#include <vector>\nusing namespace std;\nvoid rotateClockwise90(vector<vector<int>>& a) {\n    int n = a.size();\n    for (int r = 0; r < n; ++r)\n        for (int c = r + 1; c < n; ++c)\n            swap(a[r][c], a[c][r]);\n    for (auto& row : a) reverse(row.begin(), row.end());\n}"
   },
   "s3-print-the-matrix-in-spiral-manner": {
     "trick": "Maintain top, bottom, left, and right boundaries; traverse one edge, then shrink its boundary.",
     "time": "O(rows × cols)",
     "space": "O(1) beyond output",
-    "code": "vector<int> spiralOrder(const vector<vector<int>>& a) {\n    if (a.empty() || a[0].empty()) return {};\n    int top = 0, bottom = static_cast<int>(a.size()) - 1;\n    int left = 0, right = static_cast<int>(a[0].size()) - 1;\n    vector<int> out;\n    while (top <= bottom && left <= right) {\n        for (int c = left; c <= right; ++c) out.push_back(a[top][c]);\n        ++top;\n        for (int r = top; r <= bottom; ++r) out.push_back(a[r][right]);\n        --right;\n        if (top <= bottom) {\n            for (int c = right; c >= left; --c) out.push_back(a[bottom][c]);\n            --bottom;\n        }\n        if (left <= right) {\n            for (int r = bottom; r >= top; --r) out.push_back(a[r][left]);\n            ++left;\n        }\n    }\n    return out;\n}"
+    "code": "#include <vector>\nusing namespace std;\nvector<int> spiralOrder(const vector<vector<int>>& a) {\n    if (a.empty() || a[0].empty()) return {};\n    int top = 0, bottom = static_cast<int>(a.size()) - 1;\n    int left = 0, right = static_cast<int>(a[0].size()) - 1;\n    vector<int> out;\n    while (top <= bottom && left <= right) {\n        for (int c = left; c <= right; ++c) out.push_back(a[top][c]);\n        ++top;\n        for (int r = top; r <= bottom; ++r) out.push_back(a[r][right]);\n        --right;\n        if (top <= bottom) {\n            for (int c = right; c >= left; --c) out.push_back(a[bottom][c]);\n            --bottom;\n        }\n        if (left <= right) {\n            for (int r = bottom; r >= top; --r) out.push_back(a[r][left]);\n            ++left;\n        }\n    }\n    return out;\n}"
   },
   "s3-count-subarrays-with-given-sum": {
     "trick": "For each prefix sum, add the number of earlier prefixes equal to current-k.",
     "time": "O(n) expected",
     "space": "O(n)",
-    "code": "long long countSubarraysSumK(const vector<int>& a, long long k) {\n    unordered_map<long long, long long> seen{{0, 1}};\n    long long prefix = 0, answer = 0;\n    for (int x : a) {\n        prefix += x;\n        auto it = seen.find(prefix - k);\n        if (it != seen.end()) answer += it->second;\n        ++seen[prefix];\n    }\n    return answer;\n}"
+    "code": "#include <unordered_map>\n#include <vector>\nusing namespace std;\nlong long countSubarraysSumK(const vector<int>& a, long long k) {\n    unordered_map<long long, long long> seen{{0, 1}};\n    long long prefix = 0, answer = 0;\n    for (int x : a) {\n        prefix += x;\n        auto it = seen.find(prefix - k);\n        if (it != seen.end()) answer += it->second;\n        ++seen[prefix];\n    }\n    return answer;\n}"
   },
   "s3-pascal-s-triangle": {
     "trick": "Each inner cell is the sum of the two cells directly above it; edge cells are one.",
     "time": "O(n²)",
     "space": "O(n²) output",
-    "code": "vector<vector<long long>> pascalTriangle(int rows) {\n    vector<vector<long long>> result;\n    for (int r = 0; r < rows; ++r) {\n        result.push_back(vector<long long>(r + 1, 1));\n        for (int c = 1; c < r; ++c)\n            result[r][c] = result[r - 1][c - 1] + result[r - 1][c];\n    }\n    return result;\n}"
+    "code": "#include <vector>\nusing namespace std;\nvector<vector<long long>> pascalTriangle(int rows) {\n    vector<vector<long long>> result;\n    for (int r = 0; r < rows; ++r) {\n        result.push_back(vector<long long>(r + 1, 1));\n        for (int c = 1; c < r; ++c)\n            result[r][c] = result[r - 1][c - 1] + result[r - 1][c];\n    }\n    return result;\n}"
   },
   "s3-majority-element-n-3-times": {
     "trick": "At most two values can occur more than n/3 times. Cancel triples of distinct values, then verify candidates.",
     "time": "O(n)",
     "space": "O(1) beyond output",
-    "code": "vector<int> majorityOverThird(const vector<int>& a) {\n    int first = 0, second = 0, countFirst = 0, countSecond = 0;\n    for (int x : a) {\n        if (countFirst && x == first) ++countFirst;\n        else if (countSecond && x == second) ++countSecond;\n        else if (countFirst == 0) { first = x; countFirst = 1; }\n        else if (countSecond == 0) { second = x; countSecond = 1; }\n        else { --countFirst; --countSecond; }\n    }\n    countFirst = countSecond = 0;\n    for (int x : a) {\n        if (x == first) ++countFirst;\n        else if (x == second) ++countSecond;\n    }\n    vector<int> out;\n    if (countFirst > static_cast<int>(a.size()) / 3) out.push_back(first);\n    if (countSecond > static_cast<int>(a.size()) / 3) out.push_back(second);\n    sort(out.begin(), out.end());\n    return out;\n}"
+    "code": "#include <algorithm>\n#include <vector>\nusing namespace std;\nvector<int> majorityOverThird(const vector<int>& a) {\n    int first = 0, second = 0, countFirst = 0, countSecond = 0;\n    for (int x : a) {\n        if (countFirst && x == first) ++countFirst;\n        else if (countSecond && x == second) ++countSecond;\n        else if (countFirst == 0) { first = x; countFirst = 1; }\n        else if (countSecond == 0) { second = x; countSecond = 1; }\n        else { --countFirst; --countSecond; }\n    }\n    countFirst = countSecond = 0;\n    for (int x : a) {\n        if (x == first) ++countFirst;\n        else if (x == second) ++countSecond;\n    }\n    vector<int> out;\n    if (countFirst > static_cast<int>(a.size()) / 3) out.push_back(first);\n    if (countSecond > static_cast<int>(a.size()) / 3) out.push_back(second);\n    sort(out.begin(), out.end());\n    return out;\n}"
   },
   "s3-3-sum-problem": {
     "trick": "Sort; fix one value, then sweep the remaining range with two pointers, skipping duplicates.",
     "time": "O(n²)",
     "space": "O(1) beyond output and sorting",
-    "code": "vector<vector<int>> threeSum(vector<int> a) {\n    sort(a.begin(), a.end());\n    vector<vector<int>> out;\n    int n = a.size();\n    for (int i = 0; i + 2 < n; ++i) {\n        if (i && a[i] == a[i - 1]) continue;\n        int left = i + 1, right = n - 1;\n        while (left < right) {\n            long long sum = static_cast<long long>(a[i]) + a[left] + a[right];\n            if (sum < 0) ++left;\n            else if (sum > 0) --right;\n            else {\n                out.push_back({a[i], a[left], a[right]});\n                int lv = a[left], rv = a[right];\n                while (left < right && a[left] == lv) ++left;\n                while (left < right && a[right] == rv) --right;\n            }\n        }\n    }\n    return out;\n}"
+    "code": "#include <algorithm>\n#include <vector>\nusing namespace std;\nvector<vector<int>> threeSum(vector<int> a) {\n    sort(a.begin(), a.end());\n    vector<vector<int>> out;\n    int n = a.size();\n    for (int i = 0; i + 2 < n; ++i) {\n        if (i && a[i] == a[i - 1]) continue;\n        int left = i + 1, right = n - 1;\n        while (left < right) {\n            long long sum = static_cast<long long>(a[i]) + a[left] + a[right];\n            if (sum < 0) ++left;\n            else if (sum > 0) --right;\n            else {\n                out.push_back({a[i], a[left], a[right]});\n                int lv = a[left], rv = a[right];\n                while (left < right && a[left] == lv) ++left;\n                while (left < right && a[right] == rv) --right;\n            }\n        }\n    }\n    return out;\n}"
   },
   "s3-4-sum-problem": {
     "trick": "Sort, fix two values, then use two pointers for the remaining pair; skip duplicates at every level.",
     "time": "O(n³)",
     "space": "O(1) beyond output and sorting",
-    "code": "vector<vector<int>> fourSum(vector<int> a, long long target) {\n    sort(a.begin(), a.end());\n    vector<vector<int>> out;\n    int n = a.size();\n    for (int i = 0; i + 3 < n; ++i) {\n        if (i && a[i] == a[i - 1]) continue;\n        for (int j = i + 1; j + 2 < n; ++j) {\n            if (j > i + 1 && a[j] == a[j - 1]) continue;\n            int left = j + 1, right = n - 1;\n            while (left < right) {\n                long long sum = static_cast<long long>(a[i]) + a[j] + a[left] + a[right];\n                if (sum < target) ++left;\n                else if (sum > target) --right;\n                else {\n                    out.push_back({a[i], a[j], a[left], a[right]});\n                    int lv = a[left], rv = a[right];\n                    while (left < right && a[left] == lv) ++left;\n                    while (left < right && a[right] == rv) --right;\n                }\n            }\n        }\n    }\n    return out;\n}"
+    "code": "#include <algorithm>\n#include <vector>\nusing namespace std;\nvector<vector<int>> fourSum(vector<int> a, long long target) {\n    sort(a.begin(), a.end());\n    vector<vector<int>> out;\n    int n = a.size();\n    for (int i = 0; i + 3 < n; ++i) {\n        if (i && a[i] == a[i - 1]) continue;\n        for (int j = i + 1; j + 2 < n; ++j) {\n            if (j > i + 1 && a[j] == a[j - 1]) continue;\n            int left = j + 1, right = n - 1;\n            while (left < right) {\n                long long sum = static_cast<long long>(a[i]) + a[j] + a[left] + a[right];\n                if (sum < target) ++left;\n                else if (sum > target) --right;\n                else {\n                    out.push_back({a[i], a[j], a[left], a[right]});\n                    int lv = a[left], rv = a[right];\n                    while (left < right && a[left] == lv) ++left;\n                    while (left < right && a[right] == rv) --right;\n                }\n            }\n        }\n    }\n    return out;\n}"
   },
   "s3-largest-subarray-with-0-sum": {
     "trick": "Equal prefix sums bound a zero-sum subarray; keep each prefix's earliest index for maximum length.",
     "time": "O(n) expected",
     "space": "O(n)",
-    "code": "int longestZeroSumSubarray(const vector<int>& a) {\n    unordered_map<long long, int> first{{0, -1}};\n    long long prefix = 0;\n    int best = 0;\n    for (int i = 0; i < static_cast<int>(a.size()); ++i) {\n        prefix += a[i];\n        auto it = first.find(prefix);\n        if (it != first.end()) best = max(best, i - it->second);\n        else first[prefix] = i;\n    }\n    return best;\n}"
+    "code": "#include <algorithm>\n#include <unordered_map>\n#include <vector>\nusing namespace std;\nint longestZeroSumSubarray(const vector<int>& a) {\n    unordered_map<long long, int> first{{0, -1}};\n    long long prefix = 0;\n    int best = 0;\n    for (int i = 0; i < static_cast<int>(a.size()); ++i) {\n        prefix += a[i];\n        auto it = first.find(prefix);\n        if (it != first.end()) best = max(best, i - it->second);\n        else first[prefix] = i;\n    }\n    return best;\n}"
   },
   "s3-count-number-of-subarrays-with-given-xor-k": {
-    "trick": "Since prefixXor ^ earlierPrefix = k, count earlier prefixes equal to prefixXor ^ k.",
+    "trick": "Count earlier prefix XORs equal to currentPrefix XOR k. The linked GFG page asks for subsets, not subarrays.",
     "time": "O(n) expected",
     "space": "O(n)",
-    "code": "long long countSubarraysXorK(const vector<int>& a, int k) {\n    unordered_map<int, long long> seen{{0, 1}};\n    int prefix = 0;\n    long long answer = 0;\n    for (int x : a) {\n        prefix ^= x;\n        auto it = seen.find(prefix ^ k);\n        if (it != seen.end()) answer += it->second;\n        ++seen[prefix];\n    }\n    return answer;\n}"
+    "code": "#include <unordered_map>\n#include <vector>\nusing namespace std;\nlong long countSubarraysXorK(const vector<int>& a, int k) {\n    unordered_map<int, long long> seen{{0, 1}};\n    int prefix = 0;\n    long long answer = 0;\n    for (int x : a) {\n        prefix ^= x;\n        auto it = seen.find(prefix ^ k);\n        if (it != seen.end()) answer += it->second;\n        ++seen[prefix];\n    }\n    return answer;\n}"
   },
   "s3-merge-overlapping-subintervals": {
     "trick": "Sort intervals by start; extend the last merged interval while the next one overlaps.",
     "time": "O(n log n)",
     "space": "O(n) output",
-    "code": "vector<vector<int>> mergeIntervals(vector<vector<int>> intervals) {\n    sort(intervals.begin(), intervals.end());\n    vector<vector<int>> out;\n    for (const auto& interval : intervals) {\n        if (out.empty() || interval[0] > out.back()[1])\n            out.push_back(interval);\n        else\n            out.back()[1] = max(out.back()[1], interval[1]);\n    }\n    return out;\n}"
+    "code": "#include <algorithm>\n#include <vector>\nusing namespace std;\nvector<vector<int>> mergeIntervals(vector<vector<int>> intervals) {\n    sort(intervals.begin(), intervals.end());\n    vector<vector<int>> out;\n    for (const auto& interval : intervals) {\n        if (out.empty() || interval[0] > out.back()[1])\n            out.push_back(interval);\n        else\n            out.back()[1] = max(out.back()[1], interval[1]);\n    }\n    return out;\n}"
   },
   "s3-merge-two-sorted-arrays-without-extra-space": {
-    "trick": "Treat both arrays as one virtual array and compare elements a shrinking gap apart.",
-    "time": "O((n+m) log(n+m))",
+    "trick": "For two full arrays, the shrinking-gap method merges without an extra array. The linked LeetCode task has spare slots in its first array; fill those backward instead.",
+    "time": "O((n+m) log(n+m)) gap method; O(n+m) linked LeetCode variant",
     "space": "O(1)",
-    "code": "void mergeSortedWithoutExtra(vector<int>& a, vector<int>& b) {\n    size_t total = a.size() + b.size();\n    auto at = [&](size_t i) -> int& {\n        return i < a.size() ? a[i] : b[i - a.size()];\n    };\n    for (size_t gap = (total + 1) / 2; gap > 0; gap = gap == 1 ? 0 : (gap + 1) / 2) {\n        for (size_t i = 0; i + gap < total; ++i)\n            if (at(i) > at(i + gap)) swap(at(i), at(i + gap));\n    }\n}"
+    "code": "#include <algorithm>\n#include <vector>\nusing namespace std;\nvoid mergeSortedWithoutExtra(vector<int>& a, vector<int>& b) {\n    int total = (int)a.size() + (int)b.size();\n    auto at = [&](int i) -> int& {\n        return i < (int)a.size() ? a[i] : b[i - (int)a.size()];\n    };\n    for (int gap = (total + 1) / 2; gap > 0;\n         gap = gap == 1 ? 0 : (gap + 1) / 2)\n        for (int i = 0; i + gap < total; ++i)\n            if (at(i) > at(i + gap)) swap(at(i), at(i + gap));\n}\nvoid mergeIntoFirst(vector<int>& a, int m, const vector<int>& b) {\n    int i = m - 1, j = (int)b.size() - 1, write = m + j;\n    while (j >= 0) {\n        if (i >= 0 && a[i] > b[j]) a[write--] = a[i--];\n        else a[write--] = b[j--];\n    }\n}"
   },
   "s3-find-the-repeating-and-missing-number": {
     "trick": "Use each value as an index and negate the value there; an already-negative slot reveals the duplicate. The positive slot reveals the missing value.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "pair<int, int> repeatingAndMissing(vector<int>& a) {\n    int duplicate = -1, missing = -1;\n    for (int value : a) {\n        int index = abs(value) - 1;\n        if (a[index] < 0) duplicate = index + 1;\n        else a[index] = -a[index];\n    }\n    for (int i = 0; i < static_cast<int>(a.size()); ++i) {\n        if (a[i] > 0) missing = i + 1;\n        a[i] = abs(a[i]); // restore caller's array\n    }\n    return {duplicate, missing};\n}"
+    "code": "#include <cstdlib>\n#include <utility>\n#include <vector>\nusing namespace std;\npair<int, int> repeatingAndMissing(vector<int>& a) {\n    int duplicate = -1, missing = -1;\n    for (int value : a) {\n        int index = abs(value) - 1;\n        if (a[index] < 0) duplicate = index + 1;\n        else a[index] = -a[index];\n    }\n    for (int i = 0; i < static_cast<int>(a.size()); ++i) {\n        if (a[i] > 0) missing = i + 1;\n        a[i] = abs(a[i]); // restore caller's array\n    }\n    return {duplicate, missing};\n}"
   },
   "s3-count-inversions": {
     "trick": "During merge sort, if left[i] exceeds right[j], it exceeds every remaining left value too.",
     "time": "O(n log n)",
     "space": "O(n)",
-    "code": "long long countInversions(vector<int> a) {\n    vector<int> temp(a.size());\n    auto solve = [&](auto&& self, int left, int right) -> long long {\n        if (right - left <= 1) return 0;\n        int mid = left + (right - left) / 2;\n        long long count = self(self, left, mid) + self(self, mid, right);\n        int i = left, j = mid, write = left;\n        while (i < mid && j < right) {\n            if (a[i] <= a[j]) temp[write++] = a[i++];\n            else {\n                count += mid - i;\n                temp[write++] = a[j++];\n            }\n        }\n        while (i < mid) temp[write++] = a[i++];\n        while (j < right) temp[write++] = a[j++];\n        for (int k = left; k < right; ++k) a[k] = temp[k];\n        return count;\n    };\n    return solve(solve, 0, static_cast<int>(a.size()));\n}"
+    "code": "#include <vector>\nusing namespace std;\nlong long countInversions(vector<int> a) {\n    vector<int> temp(a.size());\n    auto solve = [&](auto&& self, int left, int right) -> long long {\n        if (right - left <= 1) return 0;\n        int mid = left + (right - left) / 2;\n        long long count = self(self, left, mid) + self(self, mid, right);\n        int i = left, j = mid, write = left;\n        while (i < mid && j < right) {\n            if (a[i] <= a[j]) temp[write++] = a[i++];\n            else {\n                count += mid - i;\n                temp[write++] = a[j++];\n            }\n        }\n        while (i < mid) temp[write++] = a[i++];\n        while (j < right) temp[write++] = a[j++];\n        for (int k = left; k < right; ++k) a[k] = temp[k];\n        return count;\n    };\n    return solve(solve, 0, static_cast<int>(a.size()));\n}"
   },
   "s3-reverse-pairs": {
     "trick": "Before merging sorted halves, advance a right pointer for each left value while left > 2*right.",
     "time": "O(n log n)",
     "space": "O(n)",
-    "code": "long long countReversePairs(vector<int> a) {\n    vector<int> temp(a.size());\n    auto solve = [&](auto&& self, int left, int right) -> long long {\n        if (right - left <= 1) return 0;\n        int mid = left + (right - left) / 2;\n        long long count = self(self, left, mid) + self(self, mid, right);\n        int j = mid;\n        for (int i = left; i < mid; ++i) {\n            while (j < right && static_cast<long long>(a[i]) > 2LL * a[j]) ++j;\n            count += j - mid;\n        }\n        int i = left; j = mid;\n        for (int write = left; write < right; ++write) {\n            if (j == right || (i < mid && a[i] <= a[j])) temp[write] = a[i++];\n            else temp[write] = a[j++];\n        }\n        for (int k = left; k < right; ++k) a[k] = temp[k];\n        return count;\n    };\n    return solve(solve, 0, static_cast<int>(a.size()));\n}"
+    "code": "#include <vector>\nusing namespace std;\nlong long countReversePairs(vector<int> a) {\n    vector<int> temp(a.size());\n    auto solve = [&](auto&& self, int left, int right) -> long long {\n        if (right - left <= 1) return 0;\n        int mid = left + (right - left) / 2;\n        long long count = self(self, left, mid) + self(self, mid, right);\n        int j = mid;\n        for (int i = left; i < mid; ++i) {\n            while (j < right && static_cast<long long>(a[i]) > 2LL * a[j]) ++j;\n            count += j - mid;\n        }\n        int i = left; j = mid;\n        for (int write = left; write < right; ++write) {\n            if (j == right || (i < mid && a[i] <= a[j])) temp[write] = a[i++];\n            else temp[write] = a[j++];\n        }\n        for (int k = left; k < right; ++k) a[k] = temp[k];\n        return count;\n    };\n    return solve(solve, 0, static_cast<int>(a.size()));\n}"
   },
   "s3-maximum-product-subarray": {
     "trick": "Track both maximum and minimum products ending here: a negative value can swap their roles.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "long long maxProductSubarray(const vector<int>& a) {\n    if (a.empty()) throw invalid_argument(\"array must be nonempty\");\n    long long hi = a[0], lo = a[0], best = a[0];\n    for (size_t i = 1; i < a.size(); ++i) {\n        long long x = a[i];\n        if (x < 0) swap(hi, lo);\n        hi = max(x, hi * x);\n        lo = min(x, lo * x);\n        best = max(best, hi);\n    }\n    return best; // assumes intermediate products fit long long\n}"
+    "code": "#include <algorithm>\n#include <cstddef>\n#include <stdexcept>\n#include <vector>\nusing namespace std;\nlong long maxProductSubarray(const vector<int>& a) {\n    if (a.empty()) throw invalid_argument(\"array must be nonempty\");\n    long long hi = a[0], lo = a[0], best = a[0];\n    for (size_t i = 1; i < a.size(); ++i) {\n        long long x = a[i];\n        if (x < 0) swap(hi, lo);\n        hi = max(x, hi * x);\n        lo = min(x, lo * x);\n        best = max(best, hi);\n    }\n    return best; // assumes intermediate products fit long long\n}"
   }
 }

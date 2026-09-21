@@ -6,22 +6,22 @@
     "code": "bool isArmstrong(int n) {\n    if (n < 0) return false;\n    int digits = 0, t = n;\n    do { ++digits; t /= 10; } while (t);          // count how many digits n has\n    long long sum = 0;\n    t = n;\n    do {\n        int digit = t % 10;\n        long long power = 1;\n        for (int i = 0; i < digits; ++i) power *= digit;  // digit raised to (digit count)\n        sum += power;\n        t /= 10;\n    } while (t);\n    return sum == n;                               // Armstrong iff that sum equals n\n}"
   },
   "s1-check-for-prime": {
-    "trick": "A composite number has a factor no larger than its square root.",
+    "trick": "Check divisors only up to √n. The linked GFG minimum-jumps page is unrelated; the CN/TUF links match this prime-check lesson.",
     "time": "O(√n)",
     "space": "O(1)",
     "code": "bool isPrime(int n) {\n    if (n < 2) return false;                        // 0 and 1 aren't prime\n    for (int d = 2; d <= n / d; ++d)                 // only need to check up to sqrt(n)\n        if (n % d == 0) return false;                // found a factor -> not prime\n    return true;\n}"
   },
   "s1-check-palindrome": {
-    "trick": "Reverse the number the same way as above, then compare it to the original.",
+    "trick": "Reverse only the last half of the digits, then compare both halves.",
     "time": "O(log₁₀ n)",
     "space": "O(1)",
-    "code": "bool isPalindrome(int n) {\n    int original = n, rev = 0;\n    while (n != 0) {\n        rev = rev * 10 + (n % 10);  // build the reversed number digit by digit\n        n /= 10;\n    }\n    return original == rev;         // palindrome iff it reads the same reversed\n}"
+    "code": "bool isPalindrome(int n) {\n    if (n < 0 || (n != 0 && n % 10 == 0)) return false;\n    int reversedHalf = 0;\n    while (n > reversedHalf) {\n        reversedHalf = reversedHalf * 10 + n % 10;\n        n /= 10;\n    }\n    return n == reversedHalf || n == reversedHalf / 10;\n}"
   },
   "s1-count-digits": {
-    "trick": "Repeatedly divide by 10 until it's 0, counting each division. Zero itself has exactly one digit.",
+    "trick": "Count decimal digits by repeated division; zero has one digit. The linked GFG task instead counts nonzero digits that divide the original number.",
     "time": "O(log₁₀ n)",
     "space": "O(1)",
-    "code": "int countDigits(int n) {\n    if (n == 0) return 1;           // 0 has exactly one digit\n    int count = 0;\n    while (n != 0) {\n        count++;                    // one more digit found\n        n /= 10;                    // strip off the last digit\n    }\n    return count;\n}"
+    "code": "int countDigits(int n) {\n    int digits = 0;\n    do { ++digits; n /= 10; } while (n != 0);\n    return digits;\n}\nint countDividingDigits(int n) {\n    int original = n, value = n, answer = 0;\n    while (value > 0) {\n        int digit = value % 10;\n        if (digit != 0 && original % digit == 0) ++answer;\n        value /= 10;\n    }\n    return answer; // linked GFG variant, for positive n\n}"
   },
   "s1-counting-frequencies-of-array-elements": {
     "trick": "Increment a hash-map count for each value; the map is the frequency table.",
@@ -30,22 +30,22 @@
     "code": "#include <unordered_map>\n#include <vector>\nusing namespace std;\nunordered_map<int, int> frequencies(const vector<int>& arr) {\n    unordered_map<int, int> count;\n    for (int value : arr) ++count[value];  // bump this value's count by one\n    return count;\n}"
   },
   "s1-gcd-or-hcf": {
-    "trick": "Euclid's algorithm: gcd(a, b) = gcd(b, a % b). Keep replacing the pair until b hits 0 — a is the answer.",
+    "trick": "Euclid's algorithm repeatedly replaces (a,b) with (b,a mod b). Normalize signs so the HCF is nonnegative.",
     "time": "O(log(min(a, b)))",
     "space": "O(1)",
-    "code": "#include <numeric>\nusing namespace std;\nint gcd(int a, int b) {\n    while (b != 0) {\n        int temp = b;\n        b = a % b;                  // key fact: gcd(a, b) == gcd(b, a % b)\n        a = temp;\n    }\n    return a;                       // b hit 0, so a now holds the gcd\n}"
+    "code": "long long gcdHcf(int a, int b) {\n    long long x = a, y = b;\n    if (x < 0) x = -x;\n    if (y < 0) y = -y;\n    while (y != 0) {\n        long long remainder = x % y;\n        x = y;\n        y = remainder;\n    }\n    return x;\n}"
   },
   "s1-print-all-divisors": {
-    "trick": "Every divisor below sqrt(n) pairs with n/divisor; collect both and sort for ascending output.",
-    "time": "O(√n + d log d)",
-    "space": "O(d), d = number of divisors",
-    "code": "#include <algorithm>\n#include <utility>\n#include <vector>\nusing namespace std;\nvector<int> divisors(int n) {\n    vector<int> ans;\n    if (n <= 0) return ans;\n    for (int d = 1; d <= n / d; ++d) {               // check divisors up to sqrt(n)\n        if (n % d == 0) {\n            ans.push_back(d);\n            if (d != n / d) ans.push_back(n / d);    // d's pair partner, unless d*d == n\n        }\n    }\n    sort(ans.begin(), ans.end());\n    return ans;\n}"
+    "trick": "Divisors of n come in pairs around √n. The linked GFG task instead sums divisors of every integer from 1 to n.",
+    "time": "O(√n + d log d) to list; O(n) for linked sum",
+    "space": "O(d) for list; O(1) for linked sum",
+    "code": "#include <algorithm>\n#include <vector>\nusing namespace std;\nvector<int> divisors(int n) {\n    vector<int> result;\n    if (n <= 0) return result;\n    for (int d = 1; d <= n / d; ++d)\n        if (n % d == 0) {\n            result.push_back(d);\n            if (d != n / d) result.push_back(n / d);\n        }\n    sort(result.begin(), result.end());\n    return result;\n}\nlong long sumOfAllDivisorsUpTo(int n) {\n    long long answer = 0;\n    for (int divisor = 1; divisor <= n; ++divisor)\n        answer += 1LL * divisor * (n / divisor);\n    return answer; // d divides floor(n/d) numbers up to n\n}"
   },
   "s1-reverse-a-number": {
-    "trick": "Pull the last digit off with n % 10, push it onto the answer with rev*10 + digit, then drop the last digit from n.",
+    "trick": "Move one digit at a time into the reversed number, checking the 32-bit boundary before multiplying by ten.",
     "time": "O(log₁₀ n)",
     "space": "O(1)",
-    "code": "int reverseNumber(int n) {\n    int rev = 0;\n    while (n != 0) {\n        int lastDigit = n % 10;     // peel off the last digit\n        rev = rev * 10 + lastDigit; // shift rev left, then append the digit\n        n /= 10;\n    }\n    return rev;\n}"
+    "code": "#include <climits>\nint reverseNumber(int n) {\n    int reversed = 0;\n    while (n != 0) {\n        int digit = n % 10;\n        if (reversed > INT_MAX / 10 ||\n            (reversed == INT_MAX / 10 && digit > 7) ||\n            reversed < INT_MIN / 10 ||\n            (reversed == INT_MIN / 10 && digit < -8))\n            return 0; // LeetCode requires zero on overflow\n        reversed = reversed * 10 + digit;\n        n /= 10;\n    }\n    return reversed;\n}"
   },
   "s1-understand-recursion-by-print-something-n-times": {
     "trick": "Every call does one unit of work, reduces n by one, and stops at zero; the base case prevents infinite recursion.",
@@ -72,10 +72,10 @@
     "code": "#include <vector>\nusing namespace std;\nvoid collectNTo1(int n, vector<int>& out) {\n    if (n <= 0) return;\n    out.push_back(n);\n    collectNTo1(n - 1, out);\n}"
   },
   "s1-sum-of-first-n-numbers": {
-    "trick": "Use the recurrence sum(n) = n + sum(n-1), with sum(0) = 0.",
-    "time": "O(n)",
-    "space": "O(n) call stack",
-    "code": "long long sumFirstN(int n) {\n    if (n <= 0) return 0;\n    return n + sumFirstN(n - 1);\n}"
+    "trick": "The lesson sums 1 through n recursively. The linked GFG task asks for the sum of cubes, equal to (n(n+1)/2)².",
+    "time": "O(n) for recursive sum; O(1) for linked cubes",
+    "space": "O(n) call stack for recursive sum; O(1) for cubes",
+    "code": "long long sumFirstN(int n) {\n    if (n <= 0) return 0;\n    return n + sumFirstN(n - 1);\n}\nlong long sumFirstNCubes(long long n) {\n    if (n <= 0) return 0;\n    long long triangle = n * (n + 1) / 2;\n    return triangle * triangle; // when answer fits long long\n}"
   },
   "s1-reverse-an-array": {
     "trick": "Swap the outer pair and move both pointers inward until they cross.",
@@ -84,10 +84,10 @@
     "code": "#include <algorithm>\n#include <vector>\nusing namespace std;\nvoid reverseArray(vector<int>& a) {\n    int left = 0, right = static_cast<int>(a.size()) - 1;\n    while (left < right) swap(a[left++], a[right--]);\n}"
   },
   "s1-check-if-a-string-is-palindrome-or-not": {
-    "trick": "Compare matching characters from both ends; one mismatch disproves a palindrome.",
+    "trick": "Compare from both ends. The linked LeetCode Valid Palindrome variant ignores punctuation and letter case.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "#include <string>\nusing namespace std;\nbool isPalindromeString(const string& s) {\n    int left = 0, right = static_cast<int>(s.size()) - 1;\n    while (left < right) {\n        if (s[left] != s[right]) return false;\n        ++left;\n        --right;\n    }\n    return true;\n}"
+    "code": "#include <cctype>\n#include <string>\nusing namespace std;\nbool isPalindromeString(const string& s) {\n    int left = 0, right = (int)s.size() - 1;\n    while (left < right)\n        if (s[left++] != s[right--]) return false;\n    return true;\n}\nbool isValidPalindrome(const string& s) {\n    int left = 0, right = (int)s.size() - 1;\n    while (left < right) {\n        while (left < right && !isalnum((unsigned char)s[left])) ++left;\n        while (left < right && !isalnum((unsigned char)s[right])) --right;\n        if (left >= right) break;\n        if (tolower((unsigned char)s[left++]) !=\n            tolower((unsigned char)s[right--])) return false;\n    }\n    return true;\n}"
   },
   "s1-fibonacci-number": {
     "trick": "Keep only the previous two Fibonacci values; each next value is their sum.",
@@ -96,34 +96,34 @@
     "code": "#include <stdexcept>\nusing namespace std;\nlong long fibonacci(int n) {\n    if (n < 0 || n > 92) throw out_of_range(\"n must be in [0, 92]\");\n    if (n == 0) return 0;\n    long long prev = 0, curr = 1;\n    for (int i = 2; i <= n; ++i) {\n        long long next = prev + curr;\n        prev = curr;\n        curr = next;\n    }\n    return curr;\n}"
   },
   "s1-find-the-highest-lowest-frequency-element": {
-    "trick": "Count with a hash map, then scan counts for maximum and minimum; choose the smaller value on ties.",
+    "trick": "Count frequencies, then choose the highest and lowest counts (smaller value on ties). The linked LeetCode page asks a different frequency problem.",
     "time": "O(n) expected",
     "space": "O(u), u = distinct values",
     "code": "#include <stdexcept>\n#include <unordered_map>\n#include <utility>\n#include <vector>\nusing namespace std;\npair<int, int> highestLowestFrequency(const vector<int>& a) {\n    if (a.empty()) throw invalid_argument(\"array must be nonempty\");\n    unordered_map<int, int> freq;\n    for (int x : a) ++freq[x];\n    int high = a[0], low = a[0];\n    for (const auto& [value, count] : freq) {\n        if (count > freq[high] || (count == freq[high] && value < high))\n            high = value;\n        if (count < freq[low] || (count == freq[low] && value < low))\n            low = value;\n    }\n    return {high, low};\n}"
   },
   "s1-user-input-output": {
-    "trick": "Extract typed values with >> and print results with <<; input is checked before use.",
+    "trick": "Read input with >> and print with <<. This is an input/output lesson; the linked GFG autocomplete page is a different problem.",
     "time": "O(1) for fixed-size input",
     "space": "O(1)",
     "code": "#include <iostream>\nusing namespace std;\nint main() {\n    int a, b;\n    if (!(cin >> a >> b)) return 0; // stop if input is missing\n    cout << a + b << '\\n';\n}"
   },
   "s1-data-types": {
-    "trick": "Choose types by range and purpose: int for ordinary integers, long long for larger sums, double for fractions, and string for text.",
+    "trick": "Select a type by the kind and range of data. For the linked practice task, map each type name to the byte count expected by that judge.",
     "time": "O(1)",
     "space": "O(1)",
-    "code": "#include <iostream>\n#include <string>\nusing namespace std;\nint main() {\n    int count = 3;\n    long long population = 8000000000LL;\n    double average = 2.5;\n    char grade = 'A';\n    bool passed = true;\n    string topic = \"DSA\";\n    cout << topic << ' ' << count << ' ' << population << ' '\n         << average << ' ' << grade << ' ' << passed << '\\n';\n}"
+    "code": "#include <string>\nusing namespace std;\nint dataTypeSize(const string& type) {\n    if (type == \"Character\") return 1;\n    if (type == \"Integer\") return 4;\n    if (type == \"Long\") return 8;\n    if (type == \"Float\") return 4;\n    if (type == \"Double\") return 8;\n    return -1;\n}\n// Fixed byte sizes above match the linked judge's expected model."
   },
   "s1-if-else-statements": {
-    "trick": "Test conditions from the most specific case to the fallback; only the first matching branch runs.",
+    "trick": "Compare a and b; only the first matching branch runs. This solves the linked if-else practice task.",
     "time": "O(1)",
     "space": "O(1)",
-    "code": "#include <string>\nusing namespace std;\nstring classifyNumber(int value) {\n    if (value > 0) return \"positive\";\n    else if (value < 0) return \"negative\";\n    return \"zero\";\n}"
+    "code": "#include <string>\nusing namespace std;\nstring compareIfElse(int a, int b) {\n    if (a < b) return \"smaller\";\n    if (a > b) return \"greater\";\n    return \"equal\";\n}"
   },
   "s1-switch-statement": {
-    "trick": "Switch selects one matching integral case. Return from each case so execution cannot fall through.",
+    "trick": "Switch on the choice: 1 uses circle area πr², and 2 uses rectangle area length×breadth, as in the linked practice task.",
     "time": "O(1)",
     "space": "O(1)",
-    "code": "#include <string>\nusing namespace std;\nstring dayName(int day) {\n    switch (day) {\n        case 1: return \"Monday\";\n        case 2: return \"Tuesday\";\n        case 3: return \"Wednesday\";\n        case 4: return \"Thursday\";\n        case 5: return \"Friday\";\n        case 6: return \"Saturday\";\n        case 7: return \"Sunday\";\n        default: return \"Invalid day\";\n    }\n}"
+    "code": "#include <vector>\nusing namespace std;\ndouble switchCase(int choice, const vector<double>& dimensions) {\n    const double PI = 3.14159265358979323846;\n    switch (choice) {\n        case 1: return PI * dimensions[0] * dimensions[0];\n        case 2: return dimensions[0] * dimensions[1];\n        default: return 0.0;\n    }\n}"
   },
   "s1-what-are-arrays-strings": {
     "trick": "An array-like vector stores indexed values; a string stores indexed characters. Both use zero-based indices.",
@@ -144,10 +144,10 @@
     "code": "int digitSum(int number) {\n    long long value = number;\n    if (value < 0) value = -value;\n    int sum = 0;\n    while (value > 0) {\n        sum += value % 10;\n        value /= 10; // remove one digit\n    }\n    return sum;\n}"
   },
   "s1-functions-pass-by-reference-and-value": {
-    "trick": "A value parameter is copied; a reference parameter aliases the caller's variable and can change it.",
+    "trick": "The linked task adds 1 to the copied value a and 2 to the referenced value b; only b changes in the caller.",
     "time": "O(1) for integers",
     "space": "O(1)",
-    "code": "void addByValue(int value, int delta) {\n    value += delta; // caller does not see this copy change\n}\nvoid addByReference(int& value, int delta) {\n    value += delta; // caller's variable changes\n}\n// Use const T& for large read-only arguments to avoid a copy."
+    "code": "#include <vector>\nusing namespace std;\nvector<int> passedBy(int a, int& b) {\n    int valueResult = a + 1; // a itself is only a local copy\n    b += 2;                  // b aliases the caller's variable\n    return {valueResult, b};\n}"
   },
   "s1-time-complexity-learn-basics-and-then-analyse-in": {
     "trick": "Count how often the dominant operation runs; nested full loops multiply, while consecutive loops add.",

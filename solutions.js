@@ -21,22 +21,22 @@ const SOLUTIONS = {
     code: "bool isPrime(int n) {\n    if (n < 2) return false;                        // 0 and 1 aren't prime\n    for (int d = 2; d <= n / d; ++d)                 // only need to check up to sqrt(n)\n        if (n % d == 0) return false;                // found a factor -> not prime\n    return true;\n}",
   },
   "s1-check-if-a-string-is-palindrome-or-not": {
-    trick: "Compare matching characters from both ends; one mismatch disproves a palindrome.",
+    trick: "Compare from both ends. The linked LeetCode Valid Palindrome variant ignores punctuation and letter case.",
     time: "O(n)",
     space: "O(1)",
-    code: "#include <string>\nusing namespace std;\nbool isPalindromeString(const string& s) {\n    int left = 0, right = static_cast<int>(s.size()) - 1;\n    while (left < right) {\n        if (s[left] != s[right]) return false;\n        ++left;\n        --right;\n    }\n    return true;\n}",
+    code: "#include <cctype>\n#include <string>\nusing namespace std;\nbool isPalindromeString(const string& s) {\n    int left = 0, right = (int)s.size() - 1;\n    while (left < right)\n        if (s[left++] != s[right--]) return false;\n    return true;\n}\nbool isValidPalindrome(const string& s) {\n    int left = 0, right = (int)s.size() - 1;\n    while (left < right) {\n        while (left < right && !isalnum((unsigned char)s[left])) ++left;\n        while (left < right && !isalnum((unsigned char)s[right])) --right;\n        if (left >= right) break;\n        if (tolower((unsigned char)s[left++]) !=\n            tolower((unsigned char)s[right--])) return false;\n    }\n    return true;\n}",
   },
   "s1-check-palindrome": {
-    trick: "Reverse the number the same way as above, then compare it to the original.",
+    trick: "Reverse only the last half of the digits, then compare both halves.",
     time: "O(log\u2081\u2080 n)",
     space: "O(1)",
-    code: "bool isPalindrome(int n) {\n    int original = n, rev = 0;\n    while (n != 0) {\n        rev = rev * 10 + (n % 10);  // build the reversed number digit by digit\n        n /= 10;\n    }\n    return original == rev;         // palindrome iff it reads the same reversed\n}",
+    code: "bool isPalindrome(int n) {\n    if (n < 0 || (n != 0 && n % 10 == 0)) return false;\n    int reversedHalf = 0;\n    while (n > reversedHalf) {\n        reversedHalf = reversedHalf * 10 + n % 10;\n        n /= 10;\n    }\n    return n == reversedHalf || n == reversedHalf / 10;\n}",
   },
   "s1-count-digits": {
-    trick: "Repeatedly divide by 10 until it's 0, counting each division. Zero itself has exactly one digit.",
+    trick: "Count decimal digits by repeated division; zero has one digit. The linked GFG task instead counts nonzero digits that divide the original number.",
     time: "O(log\u2081\u2080 n)",
     space: "O(1)",
-    code: "int countDigits(int n) {\n    if (n == 0) return 1;           // 0 has exactly one digit\n    int count = 0;\n    while (n != 0) {\n        count++;                    // one more digit found\n        n /= 10;                    // strip off the last digit\n    }\n    return count;\n}",
+    code: "int countDigits(int n) {\n    int digits = 0;\n    do { ++digits; n /= 10; } while (n != 0);\n    return digits;\n}\nint countDividingDigits(int n) {\n    int original = n, value = n, answer = 0;\n    while (value > 0) {\n        int digit = value % 10;\n        if (digit != 0 && original % digit == 0) ++answer;\n        value /= 10;\n    }\n    return answer; // linked GFG variant, for positive n\n}",
   },
   "s1-counting-frequencies-of-array-elements": {
     trick: "Increment a hash-map count for each value; the map is the frequency table.",
@@ -45,10 +45,10 @@ const SOLUTIONS = {
     code: "#include <unordered_map>\n#include <vector>\nusing namespace std;\nunordered_map<int, int> frequencies(const vector<int>& arr) {\n    unordered_map<int, int> count;\n    for (int value : arr) ++count[value];  // bump this value's count by one\n    return count;\n}",
   },
   "s1-data-types": {
-    trick: "Choose types by range and purpose: int for ordinary integers, long long for larger sums, double for fractions, and string for text.",
+    trick: "Select a type by the kind and range of data. For the linked practice task, map each type name to the byte count expected by that judge.",
     time: "O(1)",
     space: "O(1)",
-    code: "#include <iostream>\n#include <string>\nusing namespace std;\nint main() {\n    int count = 3;\n    long long population = 8000000000LL;\n    double average = 2.5;\n    char grade = 'A';\n    bool passed = true;\n    string topic = \"DSA\";\n    cout << topic << ' ' << count << ' ' << population << ' '\n         << average << ' ' << grade << ' ' << passed << '\\n';\n}",
+    code: "#include <string>\nusing namespace std;\nint dataTypeSize(const string& type) {\n    if (type == \"Character\") return 1;\n    if (type == \"Integer\") return 4;\n    if (type == \"Long\") return 8;\n    if (type == \"Float\") return 4;\n    if (type == \"Double\") return 8;\n    return -1;\n}\n// Fixed byte sizes above match the linked judge's expected model.",
   },
   "s1-factorial-of-n-numbers": {
     trick: "Generate factorials 1!, 2!, ... only while the next multiplication stays at most the limit.",
@@ -75,16 +75,16 @@ const SOLUTIONS = {
     code: "long long sumOneToN(int n) {\n    long long total = 0;\n    for (int value = 1; value <= n; ++value)\n        total += value; // one contribution per iteration\n    return total;\n}",
   },
   "s1-functions-pass-by-reference-and-value": {
-    trick: "A value parameter is copied; a reference parameter aliases the caller's variable and can change it.",
+    trick: "The linked task adds 1 to the copied value a and 2 to the referenced value b; only b changes in the caller.",
     time: "O(1) for integers",
     space: "O(1)",
-    code: "void addByValue(int value, int delta) {\n    value += delta; // caller does not see this copy change\n}\nvoid addByReference(int& value, int delta) {\n    value += delta; // caller's variable changes\n}\n// Use const T& for large read-only arguments to avoid a copy.",
+    code: "#include <vector>\nusing namespace std;\nvector<int> passedBy(int a, int& b) {\n    int valueResult = a + 1; // a itself is only a local copy\n    b += 2;                  // b aliases the caller's variable\n    return {valueResult, b};\n}",
   },
   "s1-gcd-or-hcf": {
-    trick: "Euclid's algorithm: gcd(a, b) = gcd(b, a % b). Keep replacing the pair until b hits 0 \u2014 a is the answer.",
+    trick: "Euclid's algorithm repeatedly replaces (a,b) with (b,a mod b). Normalize signs so the HCF is nonnegative.",
     time: "O(log(min(a, b)))",
     space: "O(1)",
-    code: "#include <numeric>\nusing namespace std;\nint gcd(int a, int b) {\n    while (b != 0) {\n        int temp = b;\n        b = a % b;                  // key fact: gcd(a, b) == gcd(b, a % b)\n        a = temp;\n    }\n    return a;                       // b hit 0, so a now holds the gcd\n}",
+    code: "long long gcdHcf(int a, int b) {\n    long long x = a, y = b;\n    if (x < 0) x = -x;\n    if (y < 0) y = -y;\n    while (y != 0) {\n        long long remainder = x % y;\n        x = y;\n        y = remainder;\n    }\n    return x;\n}",
   },
   "s1-hashing-theory": {
     trick: "Hash tables map keys to buckets, giving expected constant-time insert and lookup. Use them to count frequencies.",
@@ -93,10 +93,10 @@ const SOLUTIONS = {
     code: "#include <unordered_map>\n#include <vector>\nusing namespace std;\nint mostFrequentCount(const vector<int>& values) {\n    unordered_map<int, int> frequency;\n    int best = 0;\n    for (int value : values) {\n        int count = ++frequency[value];\n        if (count > best) best = count;\n    }\n    return best;\n}",
   },
   "s1-if-else-statements": {
-    trick: "Test conditions from the most specific case to the fallback; only the first matching branch runs.",
+    trick: "Compare a and b; only the first matching branch runs. This solves the linked if-else practice task.",
     time: "O(1)",
     space: "O(1)",
-    code: "#include <string>\nusing namespace std;\nstring classifyNumber(int value) {\n    if (value > 0) return \"positive\";\n    else if (value < 0) return \"negative\";\n    return \"zero\";\n}",
+    code: "#include <string>\nusing namespace std;\nstring compareIfElse(int a, int b) {\n    if (a < b) return \"smaller\";\n    if (a > b) return \"greater\";\n    return \"equal\";\n}",
   },
   "s1-java-collections": {
     trick: "This lesson is about Java collections; the C++ equivalents are vector for ArrayList, unordered_set for HashSet, and unordered_map for HashMap.",
@@ -117,10 +117,10 @@ const SOLUTIONS = {
     code: "#include <vector>\nusing namespace std;\nvoid collect1ToN(int n, vector<int>& out) {\n    if (n <= 0) return;\n    collect1ToN(n - 1, out);\n    out.push_back(n);\n}",
   },
   "s1-print-all-divisors": {
-    trick: "Every divisor below sqrt(n) pairs with n/divisor; collect both and sort for ascending output.",
-    time: "O(\u221an + d log d)",
-    space: "O(d), d = number of divisors",
-    code: "#include <algorithm>\n#include <utility>\n#include <vector>\nusing namespace std;\nvector<int> divisors(int n) {\n    vector<int> ans;\n    if (n <= 0) return ans;\n    for (int d = 1; d <= n / d; ++d) {               // check divisors up to sqrt(n)\n        if (n % d == 0) {\n            ans.push_back(d);\n            if (d != n / d) ans.push_back(n / d);    // d's pair partner, unless d*d == n\n        }\n    }\n    sort(ans.begin(), ans.end());\n    return ans;\n}",
+    trick: "Divisors of n come in pairs around \u221an. The linked GFG task instead sums divisors of every integer from 1 to n.",
+    time: "O(\u221an + d log d) to list; O(n) for linked sum",
+    space: "O(d) for list; O(1) for linked sum",
+    code: "#include <algorithm>\n#include <vector>\nusing namespace std;\nvector<int> divisors(int n) {\n    vector<int> result;\n    if (n <= 0) return result;\n    for (int d = 1; d <= n / d; ++d)\n        if (n % d == 0) {\n            result.push_back(d);\n            if (d != n / d) result.push_back(n / d);\n        }\n    sort(result.begin(), result.end());\n    return result;\n}\nlong long sumOfAllDivisorsUpTo(int n) {\n    long long answer = 0;\n    for (int divisor = 1; divisor <= n; ++divisor)\n        answer += 1LL * divisor * (n / divisor);\n    return answer; // d divides floor(n/d) numbers up to n\n}",
   },
   "s1-print-n-to-1-using-recursion": {
     trick: "Output n before recursing to n-1, giving descending order.",
@@ -135,10 +135,10 @@ const SOLUTIONS = {
     code: "#include <iostream>\n#include <string>\nusing namespace std;\nvoid printNameNTimes(const string& name, int n, ostream& out) {\n    if (n <= 0) return;\n    out << name << '\\n';\n    printNameNTimes(name, n - 1, out);\n}",
   },
   "s1-reverse-a-number": {
-    trick: "Pull the last digit off with n % 10, push it onto the answer with rev*10 + digit, then drop the last digit from n.",
+    trick: "Move one digit at a time into the reversed number, checking the 32-bit boundary before multiplying by ten.",
     time: "O(log\u2081\u2080 n)",
     space: "O(1)",
-    code: "int reverseNumber(int n) {\n    int rev = 0;\n    while (n != 0) {\n        int lastDigit = n % 10;     // peel off the last digit\n        rev = rev * 10 + lastDigit; // shift rev left, then append the digit\n        n /= 10;\n    }\n    return rev;\n}",
+    code: "#include <climits>\nint reverseNumber(int n) {\n    int reversed = 0;\n    while (n != 0) {\n        int digit = n % 10;\n        if (reversed > INT_MAX / 10 ||\n            (reversed == INT_MAX / 10 && digit > 7) ||\n            reversed < INT_MIN / 10 ||\n            (reversed == INT_MIN / 10 && digit < -8))\n            return 0; // LeetCode requires zero on overflow\n        reversed = reversed * 10 + digit;\n        n /= 10;\n    }\n    return reversed;\n}",
   },
   "s1-reverse-an-array": {
     trick: "Swap the outer pair and move both pointers inward until they cross.",
@@ -147,16 +147,16 @@ const SOLUTIONS = {
     code: "#include <algorithm>\n#include <vector>\nusing namespace std;\nvoid reverseArray(vector<int>& a) {\n    int left = 0, right = static_cast<int>(a.size()) - 1;\n    while (left < right) swap(a[left++], a[right--]);\n}",
   },
   "s1-sum-of-first-n-numbers": {
-    trick: "Use the recurrence sum(n) = n + sum(n-1), with sum(0) = 0.",
-    time: "O(n)",
-    space: "O(n) call stack",
-    code: "long long sumFirstN(int n) {\n    if (n <= 0) return 0;\n    return n + sumFirstN(n - 1);\n}",
+    trick: "The lesson sums 1 through n recursively. The linked GFG task asks for the sum of cubes, equal to (n(n+1)/2)\u00b2.",
+    time: "O(n) for recursive sum; O(1) for linked cubes",
+    space: "O(n) call stack for recursive sum; O(1) for cubes",
+    code: "long long sumFirstN(int n) {\n    if (n <= 0) return 0;\n    return n + sumFirstN(n - 1);\n}\nlong long sumFirstNCubes(long long n) {\n    if (n <= 0) return 0;\n    long long triangle = n * (n + 1) / 2;\n    return triangle * triangle; // when answer fits long long\n}",
   },
   "s1-switch-statement": {
-    trick: "Switch selects one matching integral case. Return from each case so execution cannot fall through.",
+    trick: "Switch on the choice: 1 uses circle area \u03c0r\u00b2, and 2 uses rectangle area length\u00d7breadth, as in the linked practice task.",
     time: "O(1)",
     space: "O(1)",
-    code: "#include <string>\nusing namespace std;\nstring dayName(int day) {\n    switch (day) {\n        case 1: return \"Monday\";\n        case 2: return \"Tuesday\";\n        case 3: return \"Wednesday\";\n        case 4: return \"Thursday\";\n        case 5: return \"Friday\";\n        case 6: return \"Saturday\";\n        case 7: return \"Sunday\";\n        default: return \"Invalid day\";\n    }\n}",
+    code: "#include <vector>\nusing namespace std;\ndouble switchCase(int choice, const vector<double>& dimensions) {\n    const double PI = 3.14159265358979323846;\n    switch (choice) {\n        case 1: return PI * dimensions[0] * dimensions[0];\n        case 2: return dimensions[0] * dimensions[1];\n        default: return 0.0;\n    }\n}",
   },
   "s1-time-complexity-learn-basics-and-then-analyse-in": {
     trick: "Count how often the dominant operation runs; nested full loops multiply, while consecutive loops add.",
@@ -1611,10 +1611,10 @@ const SOLUTIONS = {
     code: "#include <algorithm>\n#include <vector>\nusing namespace std;\nvector<vector<int>> fourSum(vector<int> a, long long target) {\n    sort(a.begin(), a.end());\n    vector<vector<int>> out;\n    int n = a.size();\n    for (int i = 0; i + 3 < n; ++i) {\n        if (i && a[i] == a[i - 1]) continue;\n        for (int j = i + 1; j + 2 < n; ++j) {\n            if (j > i + 1 && a[j] == a[j - 1]) continue;\n            int left = j + 1, right = n - 1;\n            while (left < right) {\n                long long sum = static_cast<long long>(a[i]) + a[j] + a[left] + a[right];\n                if (sum < target) ++left;\n                else if (sum > target) --right;\n                else {\n                    out.push_back({a[i], a[j], a[left], a[right]});\n                    int lv = a[left], rv = a[right];\n                    while (left < right && a[left] == lv) ++left;\n                    while (left < right && a[right] == rv) --right;\n                }\n            }\n        }\n    }\n    return out;\n}",
   },
   "s3-check-if-the-array-is-sorted": {
-    trick: "Sorted means every element is \u2265 the one before it. One pass, bail out at the first drop.",
+    trick: "The sheet asks whether the array is nondecreasing. The linked LeetCode variant also allows one rotation, so both checks are shown.",
     time: "O(n)",
     space: "O(1)",
-    code: "#include <cstddef>\n#include <vector>\nusing namespace std;\nbool isSorted(vector<int>& arr) {\n    for (size_t i = 1; i < arr.size(); i++)\n        if (arr[i] < arr[i - 1]) return false;  // found a drop -> not sorted\n    return true;\n}",
+    code: "#include <vector>\nusing namespace std;\nbool isSorted(const vector<int>& values) {\n    for (int i = 1; i < (int)values.size(); ++i)\n        if (values[i] < values[i - 1]) return false;\n    return true;\n}\nbool isSortedAndRotated(const vector<int>& values) {\n    int n = (int)values.size(), drops = 0;\n    for (int i = 0; i < n; ++i)\n        if (values[i] > values[(i + 1) % n]) ++drops;\n    return drops <= 1; // includes the unrotated case\n}",
   },
   "s3-count-inversions": {
     trick: "During merge sort, if left[i] exceeds right[j], it exceeds every remaining left value too.",
@@ -1635,10 +1635,10 @@ const SOLUTIONS = {
     code: "#include <unordered_map>\n#include <vector>\nusing namespace std;\nlong long countSubarraysSumK(const vector<int>& a, long long k) {\n    unordered_map<long long, long long> seen{{0, 1}};\n    long long prefix = 0, answer = 0;\n    for (int x : a) {\n        prefix += x;\n        auto it = seen.find(prefix - k);\n        if (it != seen.end()) answer += it->second;\n        ++seen[prefix];\n    }\n    return answer;\n}",
   },
   "s3-find-missing-number-in-an-array": {
-    trick: "Numbers 1..n should sum to n(n+1)/2. Whatever's short in the actual sum is the missing number.",
+    trick: "For the linked LeetCode task, XOR 0 through n with the array of n values; paired values cancel. A separate helper covers the 1-through-n lesson variant.",
     time: "O(n)",
     space: "O(1)",
-    code: "#include <vector>\nusing namespace std;\nint findMissingNumber(vector<int>& arr, int n) {\n    long long expectedSum = (long long)n * (n + 1) / 2;  // sum of 1..n\n    long long actualSum = 0;\n    for (int x : arr) actualSum += x;\n    return (int)(expectedSum - actualSum);                // the gap is the missing number\n}",
+    code: "#include <vector>\nusing namespace std;\nint missingNumberZeroToN(const vector<int>& values) {\n    int missing = (int)values.size();\n    for (int i = 0; i < (int)values.size(); ++i)\n        missing ^= i ^ values[i];\n    return missing; // LeetCode: n values from 0..n\n}\nint missingNumberOneToN(const vector<int>& values, int n) {\n    int missing = 0;\n    for (int value = 1; value <= n; ++value) missing ^= value;\n    for (int value : values) missing ^= value;\n    return missing; // lesson variant: n-1 values from 1..n\n}",
   },
   "s3-find-the-number-that-appears-once-and-other-numb": {
     trick: "XOR cancels each paired value, leaving the unpaired value.",
@@ -1683,10 +1683,10 @@ const SOLUTIONS = {
     code: "#include <algorithm>\n#include <climits>\n#include <vector>\nusing namespace std;\nvector<int> leaders(const vector<int>& a) {\n    vector<int> out;\n    int greatestRight = INT_MIN;\n    for (int i = static_cast<int>(a.size()) - 1; i >= 0; --i) {\n        if (a[i] >= greatestRight) out.push_back(a[i]);\n        greatestRight = max(greatestRight, a[i]);\n    }\n    reverse(out.begin(), out.end());\n    return out;\n}",
   },
   "s3-left-rotate-an-array-by-d-places": {
-    trick: "Reduce d modulo n, then reverse the first d, remaining n-d, and whole array.",
+    trick: "Three reversals rotate left by d in place. The linked LeetCode task rotates right, so a right-rotation helper is also included.",
     time: "O(n)",
     space: "O(1)",
-    code: "#include <algorithm>\n#include <vector>\nusing namespace std;\nvoid rotateLeft(vector<int>& arr, int d) {\n    int n = static_cast<int>(arr.size());\n    if (n == 0) return;\n    d = (d % n + n) % n;                     // normalize d into [0, n), even if d is negative\n    reverse(arr.begin(), arr.begin() + d);   // reverse the first d elements\n    reverse(arr.begin() + d, arr.end());     // reverse the remaining n-d elements\n    reverse(arr.begin(), arr.end());          // reverse the whole thing -> net left rotation\n}",
+    code: "#include <algorithm>\n#include <vector>\nusing namespace std;\nvoid rotateLeft(vector<int>& values, int d) {\n    int n = (int)values.size();\n    if (n == 0) return;\n    d = (d % n + n) % n;\n    reverse(values.begin(), values.begin() + d);\n    reverse(values.begin() + d, values.end());\n    reverse(values.begin(), values.end());\n}\nvoid rotateRight(vector<int>& values, int k) {\n    int n = (int)values.size();\n    if (n == 0) return;\n    k = (k % n + n) % n;\n    reverse(values.begin(), values.end());\n    reverse(values.begin(), values.begin() + k);\n    reverse(values.begin() + k, values.end());\n}",
   },
   "s3-left-rotate-an-array-by-one-place": {
     trick: "Save the first element, shift the rest left, then place the saved element at the end.",
@@ -1749,10 +1749,10 @@ const SOLUTIONS = {
     code: "#include <algorithm>\n#include <vector>\nusing namespace std;\nvector<vector<int>> mergeIntervals(vector<vector<int>> intervals) {\n    sort(intervals.begin(), intervals.end());\n    vector<vector<int>> out;\n    for (const auto& interval : intervals) {\n        if (out.empty() || interval[0] > out.back()[1])\n            out.push_back(interval);\n        else\n            out.back()[1] = max(out.back()[1], interval[1]);\n    }\n    return out;\n}",
   },
   "s3-merge-two-sorted-arrays-without-extra-space": {
-    trick: "Treat both arrays as one virtual array and compare elements a shrinking gap apart.",
-    time: "O((n+m) log(n+m))",
+    trick: "For two full arrays, the shrinking-gap method merges without an extra array. The linked LeetCode task has spare slots in its first array; fill those backward instead.",
+    time: "O((n+m) log(n+m)) gap method; O(n+m) linked LeetCode variant",
     space: "O(1)",
-    code: "#include <algorithm>\n#include <cstddef>\n#include <vector>\nusing namespace std;\nvoid mergeSortedWithoutExtra(vector<int>& a, vector<int>& b) {\n    size_t total = a.size() + b.size();\n    auto at = [&](size_t i) -> int& {\n        return i < a.size() ? a[i] : b[i - a.size()];\n    };\n    for (size_t gap = (total + 1) / 2; gap > 0; gap = gap == 1 ? 0 : (gap + 1) / 2) {\n        for (size_t i = 0; i + gap < total; ++i)\n            if (at(i) > at(i + gap)) swap(at(i), at(i + gap));\n    }\n}",
+    code: "#include <algorithm>\n#include <vector>\nusing namespace std;\nvoid mergeSortedWithoutExtra(vector<int>& a, vector<int>& b) {\n    int total = (int)a.size() + (int)b.size();\n    auto at = [&](int i) -> int& {\n        return i < (int)a.size() ? a[i] : b[i - (int)a.size()];\n    };\n    for (int gap = (total + 1) / 2; gap > 0;\n         gap = gap == 1 ? 0 : (gap + 1) / 2)\n        for (int i = 0; i + gap < total; ++i)\n            if (at(i) > at(i + gap)) swap(at(i), at(i + gap));\n}\nvoid mergeIntoFirst(vector<int>& a, int m, const vector<int>& b) {\n    int i = m - 1, j = (int)b.size() - 1, write = m + j;\n    while (j >= 0) {\n        if (i >= 0 && a[i] > b[j]) a[write--] = a[i--];\n        else a[write--] = b[j--];\n    }\n}",
   },
   "s3-move-zeros-to-end": {
     trick: "Copy nonzero values forward in their original order, then fill the suffix with zeros.",
@@ -1809,10 +1809,10 @@ const SOLUTIONS = {
     code: "#include <algorithm>\n#include <vector>\nusing namespace std;\nvoid rotateClockwise90(vector<vector<int>>& a) {\n    int n = a.size();\n    for (int r = 0; r < n; ++r)\n        for (int c = r + 1; c < n; ++c)\n            swap(a[r][c], a[c][r]);\n    for (auto& row : a) reverse(row.begin(), row.end());\n}",
   },
   "s3-second-largest-element-in-an-array-without-sorti": {
-    trick: "Track the largest and second-largest in one pass. When a new largest appears, the old largest demotes to second. Skip values equal to the current largest so duplicates of the max don't count as a second.",
+    trick: "Track the largest and the strictly smaller runner-up. Use a found flag so INT_MIN remains a valid answer.",
     time: "O(n)",
     space: "O(1)",
-    code: "#include <climits>\n#include <vector>\nusing namespace std;\nint secondLargest(vector<int>& arr) {\n    int largest = INT_MIN, second = INT_MIN;\n    for (int x : arr) {\n        if (x > largest) {\n            second = largest;       // old largest demotes to second\n            largest = x;\n        } else if (x > second && x < largest) {\n            second = x;              // beats second, but isn't a duplicate of largest\n        }\n    }\n    return second == INT_MIN ? -1 : second;  // -1 means no second-largest exists\n}",
+    code: "#include <climits>\n#include <vector>\nusing namespace std;\nint secondLargest(const vector<int>& values) {\n    int largest = INT_MIN, second = INT_MIN;\n    bool hasLargest = false, hasSecond = false;\n    for (int value : values) {\n        if (!hasLargest || value > largest) {\n            if (hasLargest) { second = largest; hasSecond = true; }\n            largest = value;\n            hasLargest = true;\n        } else if (value < largest && (!hasSecond || value > second)) {\n            second = value;\n            hasSecond = true;\n        }\n    }\n    return hasSecond ? second : -1;\n}",
   },
   "s3-set-matrix-zeros": {
     trick: "Use the first row and column as markers, remembering separately whether the first column originally had a zero.",
