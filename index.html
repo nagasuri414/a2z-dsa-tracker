@@ -201,14 +201,13 @@
   .sticky-nav{position:sticky;top:0;z-index:20;background:var(--bg);
     border-bottom:1px solid var(--line-soft);transition:transform .22s ease}
   .sticky-nav.hide{transform:translateY(-100%)}
-  .toolbar{display:flex;gap:8px;flex-wrap:wrap;padding:12px 0 8px}
-  .step-jump{display:flex;gap:6px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none}
-  .step-jump::-webkit-scrollbar{display:none}
-  .step-chip{flex:none;padding:5px 12px;border-radius:99px;border:1px solid var(--line);
-    background:var(--surface);color:var(--muted);font-size:12px;font-weight:650;cursor:pointer;
-    font-family:inherit;transition:color .12s,border-color .12s,background .12s}
-  .step-chip:hover,.step-chip:focus-visible{color:var(--accent);border-color:var(--accent)}
-  .step-chip.active{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;padding:12px 0}
+  .step-menu{max-height:min(60vh,460px);overflow-y:auto;display:flex;flex-direction:column;
+    gap:6px;margin:2px -4px -4px;padding:2px 4px 4px}
+  .step-menu-item{text-align:left;font:inherit;font-size:13.5px;color:var(--text);
+    background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);
+    padding:12px 14px;min-height:44px;cursor:pointer;transition:border-color .12s,background .12s}
+  .step-menu-item:hover,.step-menu-item:focus-visible{border-color:var(--accent);outline:none}
   .search{position:relative;flex:1;min-width:210px}
   .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;
     stroke:var(--faint);fill:none;stroke-width:1.8}
@@ -362,7 +361,8 @@
     .sub tr.noterow,.sub tr.solutionrow{display:block}
     .sub tr.noterow td:first-child,.sub tr.solutionrow td:first-child{display:none}
     .sub tr.noterow td[colspan],.sub tr.solutionrow td[colspan]{display:block;width:100%;padding:10px 4px}
-    .rail{display:none}
+    .rail{right:12px;bottom:14px;gap:8px}
+    .rail button{width:42px;height:42px}
   }
 </style>
 </head>
@@ -479,8 +479,8 @@
       <select id="fDiff"><option value="">All difficulty</option><option value="e">Easy</option><option value="m">Medium</option><option value="h">Hard</option></select>
       <select id="fStat"><option value="">All status</option><option value="done">Solved</option><option value="todo">Unsolved</option><option value="revisit">Starred</option><option value="noted">Has notes</option></select>
       <button class="btn btn-quiet" id="reset">Clear</button>
+      <button class="btn btn-quiet" id="stepMenuBtn">Go to step</button>
     </div>
-    <div class="step-jump" id="stepJump"></div>
   </div>
 
   <div id="list"></div>
@@ -881,8 +881,6 @@ function render(){
       }).join("")}
     </details>`;
   }).join("");
-  document.getElementById("stepJump").innerHTML = steps.map(s =>
-    `<button class="step-chip" data-jump="${s}">${s}</button>`).join("");
   document.querySelectorAll("details.step").forEach(d => stepObserver.observe(d));
   repaintAll();
 }
@@ -1199,21 +1197,43 @@ function applyFilters(){
 }
 
 /* ---------------- step jump ---------------- */
+/* The toolbar button's label tracks whichever step is currently near the top
+   of the viewport, so there's an at-a-glance "where am I" cue without a
+   permanent index bar costing screen space. */
+const stepMenuBtn = document.getElementById("stepMenuBtn");
 const stepObserver = new IntersectionObserver(entries => {
   entries.forEach(en => {
     if(!en.isIntersecting) return;
-    const s = en.target.dataset.step;
-    document.querySelectorAll(".step-chip").forEach(c => c.classList.toggle("active", c.dataset.jump === s));
+    stepMenuBtn.textContent = `Step ${en.target.dataset.step} ▾`;
   });
 }, {rootMargin: "-8% 0px -80% 0px"});
-document.getElementById("stepJump").addEventListener("click", e => {
-  const btn = e.target.closest(".step-chip");
-  if(!btn) return;
-  const target = document.querySelector(`details.step[data-step="${btn.dataset.jump}"]`);
-  if(!target) return;
-  target.open = true;
-  target.scrollIntoView({behavior:"smooth", block:"start"});
-});
+function openStepMenu(){
+  const steps = [...new Set(DATA.map(p => p.s))];
+  const items = steps.map(s => {
+    const title = DATA.find(p => p.s === s).st;
+    return `<button class="step-menu-item" data-jump="${s}">${esc(title)}</button>`;
+  }).join("");
+  const scrim = document.createElement("div");
+  scrim.className = "scrim";
+  scrim.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="Go to step">
+    <h2>Go to step</h2><div class="step-menu">${items}</div></div>`;
+  const close = () => { scrim.remove(); document.removeEventListener("keydown", onKey); };
+  const onKey = e => { if(e.key === "Escape") close(); };
+  scrim.addEventListener("click", e => { if(e.target === scrim) close(); });
+  scrim.querySelectorAll(".step-menu-item").forEach(btn => {
+    btn.onclick = () => {
+      const target = document.querySelector(`details.step[data-step="${btn.dataset.jump}"]`);
+      close();
+      if(!target) return;
+      target.open = true;
+      target.scrollIntoView({behavior:"smooth", block:"start"});
+    };
+  });
+  document.addEventListener("keydown", onKey);
+  document.body.appendChild(scrim);
+  scrim.querySelector(".step-menu-item")?.focus();
+}
+stepMenuBtn.onclick = openStepMenu;
 /* On mobile, the sticky search/step-jump bar hides while scrolling down (more
    room to read) and reappears on scroll-up. Left alone on wider screens. */
 {
