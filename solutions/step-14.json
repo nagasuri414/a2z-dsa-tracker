@@ -9,13 +9,13 @@
     "trick": "Compare with the current node: go left for smaller values and right for larger values.",
     "time": "O(h), h = tree height",
     "space": "O(1)",
-    "code": "// Approach: Compare with the current node: go left for smaller values and right for larger values.\nstruct TreeNode { int val; TreeNode* left; TreeNode* right; };\nTreeNode* searchBST(TreeNode* root, int target) {\n    while (root) {\n        if (root->val == target) return root;\n        root = target < root->val ? root->left : root->right;\n    }\n    return nullptr;\n}"
+    "code": "// Approach: Compare with the current node: go left for smaller values and right for larger values.\nstruct TreeNode { int val; TreeNode* left; TreeNode* right; };\nTreeNode* searchBST(TreeNode* root, int target) {\n    // BST order lets us discard one subtree at each step.\n    while (root) {\n        if (root->val == target) return root;\n        root = target < root->val ? root->left : root->right;\n    }\n    return nullptr;\n}"
   },
   "s14-find-min-max-in-bst": {
     "trick": "The leftmost node is minimum and the rightmost node is maximum in a nonempty BST.",
     "time": "O(h)",
     "space": "O(1)",
-    "code": "// Approach: The leftmost node is minimum and the rightmost node is maximum in a nonempty BST.\n#include <utility>\nusing namespace std;\nstruct TreeNode { int val; TreeNode* left; TreeNode* right; };\npair<TreeNode*, TreeNode*> minMaxBST(TreeNode* root) {\n    if (!root) return {nullptr, nullptr};\n    TreeNode* smallest = root;\n    TreeNode* largest = root;\n    while (smallest->left) smallest = smallest->left;\n    while (largest->right) largest = largest->right;\n    return {smallest, largest};\n}"
+    "code": "// Approach: The leftmost node is minimum and the rightmost node is maximum in a nonempty BST.\n#include <utility>\nusing namespace std;\nstruct TreeNode { int val; TreeNode* left; TreeNode* right; };\npair<TreeNode*, TreeNode*> minMaxBST(TreeNode* root) {\n    if (!root) return {nullptr, nullptr};\n    // The minimum is the leftmost node; the maximum is the rightmost.\n    TreeNode* smallest = root;\n    TreeNode* largest = root;\n    while (smallest->left) smallest = smallest->left;\n    while (largest->right) largest = largest->right;\n    return {smallest, largest};\n}"
   },
   "s14-ceil-in-a-binary-search-tree": {
     "trick": "Seek the smallest value at least x. When a node qualifies, remember it and look left for a closer answer.",
@@ -63,7 +63,7 @@
     "trick": "Consume preorder once. Each recursive subtree accepts only values within its allowed lower and upper BST bounds.",
     "time": "O(n)",
     "space": "O(h) call stack",
-    "code": "// Approach: Consume preorder once. Each recursive subtree accepts only values within its allowed\n//   lower and upper BST bounds.\n#include <climits>\n#include <stdexcept>\n#include <vector>\nusing namespace std;\nstruct TreeNode { int val; TreeNode* left; TreeNode* right; };\nTreeNode* buildWithin(const vector<int>& pre, int& i,\n                      long long low, long long high) {\n    if (i == (int)pre.size() || pre[i] <= low || pre[i] >= high)\n        return nullptr;\n    int value = pre[i++];\n    TreeNode* root = new TreeNode{value, nullptr, nullptr};\n    root->left = buildWithin(pre, i, low, value);\n    root->right = buildWithin(pre, i, value, high);\n    return root;\n}\nTreeNode* bstFromPreorder(const vector<int>& preorder) {\n    int i = 0;\n    TreeNode* root = buildWithin(preorder, i, LLONG_MIN, LLONG_MAX);\n    if (i != (int)preorder.size()) throw invalid_argument(\"invalid BST preorder\");\n    return root;\n}"
+    "code": "// Approach: Consume preorder once. Each recursive subtree accepts only values within its allowed\n//   lower and upper BST bounds.\n#include <climits>\n#include <vector>\nusing namespace std;\nstruct TreeNode { int val; TreeNode* left; TreeNode* right; };\nTreeNode* buildWithin(const vector<int>& pre, int& i,\n                      long long low, long long high) {\n    if (i == (int)pre.size() || pre[i] <= low || pre[i] >= high)\n        return nullptr;\n    int value = pre[i++];\n    TreeNode* root = new TreeNode{value, nullptr, nullptr};\n    // All left-subtree values must be smaller than the root.\n    root->left = buildWithin(pre, i, low, value);\n    root->right = buildWithin(pre, i, value, high);\n    return root;\n}\nTreeNode* bstFromPreorder(const vector<int>& preorder) {\n    int i = 0;\n    TreeNode* root = buildWithin(preorder, i, LLONG_MIN, LLONG_MAX);\n    return root;\n}"
   },
   "s14-inorder-successor-predecessor-in-bst": {
     "trick": "While searching for x, a smaller node is a predecessor candidate and a larger node is a successor candidate; move toward x for tighter bounds.",

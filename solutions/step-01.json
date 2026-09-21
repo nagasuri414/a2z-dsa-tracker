@@ -33,7 +33,7 @@
     "trick": "Euclid's algorithm repeatedly replaces (a,b) with (b,a mod b). Normalize signs so the HCF is nonnegative.",
     "time": "O(log(min(a, b)))",
     "space": "O(1)",
-    "code": "// Approach: Euclid's algorithm repeatedly replaces (a,b) with (b,a mod b). Normalize signs so the HCF\n//   is nonnegative.\nlong long gcdHcf(int a, int b) {\n    long long x = a, y = b;\n    if (x < 0) x = -x;\n    if (y < 0) y = -y;\n    while (y != 0) {\n        long long remainder = x % y;\n        x = y;\n        y = remainder;\n    }\n    return x;\n}"
+    "code": "// Approach: Euclid's algorithm repeatedly replaces (a,b) with (b,a mod b). Normalize signs so the HCF\n//   is nonnegative.\nlong long gcdHcf(int a, int b) {\n    // The remainder shrinks the problem: gcd(a,b) equals gcd(b,a % b).\n    long long x = a, y = b;\n    if (x < 0) x = -x;\n    if (y < 0) y = -y;\n    while (y != 0) {\n        long long remainder = x % y;\n        x = y;\n        y = remainder;\n    }\n    return x;\n}"
   },
   "s1-print-all-divisors": {
     "trick": "Divisors of n come in pairs around √n. The linked GFG task instead sums divisors of every integer from 1 to n.",
@@ -51,7 +51,7 @@
     "trick": "Every call does one unit of work, reduces n by one, and stops at zero; the base case prevents infinite recursion.",
     "time": "O(n)",
     "space": "O(n) call stack",
-    "code": "// Approach: Every call does one unit of work, reduces n by one, and stops at zero; the base case\n//   prevents infinite recursion.\n#include <iostream>\n#include <string>\nusing namespace std;\nvoid printNTimes(const string& message, int n, ostream& out) {\n    if (n <= 0) return;\n    out << message << '\\n';\n    printNTimes(message, n - 1, out);\n}"
+    "code": "// Approach: Every call does one unit of work, reduces n by one, and stops at zero; the base case\n//   prevents infinite recursion.\n#include <iostream>\n#include <string>\nusing namespace std;\nvoid printNTimes(const string& message, int n, ostream& out) {\n    // The base case stops recursion; each call handles one print.\n    if (n <= 0) return;\n    out << message << '\\n';\n    printNTimes(message, n - 1, out);\n}"
   },
   "s1-print-name-n-times-using-recursion": {
     "trick": "Print once, then recurse for the remaining n-1 copies; stop when n is zero.",
@@ -87,7 +87,7 @@
     "trick": "Compare from both ends. The linked LeetCode Valid Palindrome variant ignores punctuation and letter case.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "// Approach: Compare from both ends. The linked LeetCode Valid Palindrome variant ignores punctuation\n//   and letter case.\n#include <cctype>\n#include <string>\nusing namespace std;\nbool isPalindromeString(const string& s) {\n    int left = 0, right = (int)s.size() - 1;\n    while (left < right)\n        if (s[left++] != s[right--]) return false;\n    return true;\n}\nbool isValidPalindrome(const string& s) {\n    int left = 0, right = (int)s.size() - 1;\n    while (left < right) {\n        while (left < right && !isalnum((unsigned char)s[left])) ++left;\n        while (left < right && !isalnum((unsigned char)s[right])) --right;\n        if (left >= right) break;\n        if (tolower((unsigned char)s[left++]) !=\n            tolower((unsigned char)s[right--])) return false;\n    }\n    return true;\n}"
+    "code": "// Approach: Compare from both ends. The linked LeetCode Valid Palindrome variant ignores punctuation\n//   and letter case.\n#include <cctype>\n#include <string>\nusing namespace std;\nbool isPalindromeString(const string& s) {\n    // Compare matching characters from both ends and move inward.\n    int left = 0, right = (int)s.size() - 1;\n    while (left < right)\n        if (s[left++] != s[right--]) return false;\n    return true;\n}\nbool isValidPalindrome(const string& s) {\n    int left = 0, right = (int)s.size() - 1;\n    while (left < right) {\n        while (left < right && !isalnum((unsigned char)s[left])) ++left;\n        while (left < right && !isalnum((unsigned char)s[right])) --right;\n        if (left >= right) break;\n        if (tolower((unsigned char)s[left++]) !=\n            tolower((unsigned char)s[right--])) return false;\n    }\n    return true;\n}"
   },
   "s1-fibonacci-number": {
     "trick": "Keep only the previous two Fibonacci values; each new value is their sum. Assume n is nonnegative and the answer fits long long.",
@@ -117,19 +117,19 @@
     "trick": "Compare a and b; only the first matching branch runs. This solves the linked if-else practice task.",
     "time": "O(1)",
     "space": "O(1)",
-    "code": "// Approach: Compare a and b; only the first matching branch runs. This solves the linked if-else\n//   practice task.\n#include <string>\nusing namespace std;\nstring compareIfElse(int a, int b) {\n    if (a < b) return \"smaller\";\n    if (a > b) return \"greater\";\n    return \"equal\";\n}"
+    "code": "// Approach: Compare a and b; only the first matching branch runs. This solves the linked if-else\n//   practice task.\n#include <string>\nusing namespace std;\nstring compareIfElse(int a, int b) {\n    // Only one comparison branch can describe the relationship.\n    if (a < b) return \"smaller\";\n    if (a > b) return \"greater\";\n    return \"equal\";\n}"
   },
   "s1-switch-statement": {
     "trick": "Switch on the choice: 1 uses circle area πr², and 2 uses rectangle area length×breadth, as in the linked practice task.",
     "time": "O(1)",
     "space": "O(1)",
-    "code": "// Approach: Switch on the choice: 1 uses circle area πr², and 2 uses rectangle area length×breadth,\n//   as in the linked practice task.\n#include <vector>\nusing namespace std;\ndouble switchCase(int choice, const vector<double>& dimensions) {\n    const double PI = 3.14159265358979323846;\n    switch (choice) {\n        case 1: return PI * dimensions[0] * dimensions[0];\n        case 2: return dimensions[0] * dimensions[1];\n        default: return 0.0;\n    }\n}"
+    "code": "// Approach: Switch on the choice: 1 uses circle area πr², and 2 uses rectangle area length×breadth,\n//   as in the linked practice task.\n#include <vector>\nusing namespace std;\ndouble switchCase(int choice, const vector<double>& dimensions) {\n    // Each case handles one shape and returns its area.\n    const double PI = 3.14159265358979323846;\n    switch (choice) {\n        case 1: return PI * dimensions[0] * dimensions[0];\n        case 2: return dimensions[0] * dimensions[1];\n        default: return 0.0;\n    }\n}"
   },
   "s1-what-are-arrays-strings": {
     "trick": "An array-like vector stores indexed values; a string stores indexed characters. Both use zero-based indices.",
     "time": "O(1) access; O(n) traversal",
     "space": "O(n) for stored elements",
-    "code": "// Approach: An array-like vector stores indexed values; a string stores indexed characters. Both use\n//   zero-based indices.\n#include <string>\n#include <vector>\nusing namespace std;\nint sumArray(const vector<int>& values) {\n    int sum = 0;\n    for (int value : values) sum += value;\n    return sum;\n}\nstring reverseText(string text) {\n    for (int left = 0, right = (int)text.size() - 1; left < right; ++left, --right) {\n        char temp = text[left]; text[left] = text[right]; text[right] = temp;\n    }\n    return text;\n}"
+    "code": "// Approach: An array-like vector stores indexed values; a string stores indexed characters. Both use\n//   zero-based indices.\n#include <string>\n#include <vector>\nusing namespace std;\nint sumArray(const vector<int>& values) {\n    // Indices start at zero and must stay inside the container.\n    int sum = 0;\n    for (int value : values) sum += value;\n    return sum;\n}\nstring reverseText(string text) {\n    for (int left = 0, right = (int)text.size() - 1; left < right; ++left, --right) {\n        char temp = text[left]; text[left] = text[right]; text[right] = temp;\n    }\n    return text;\n}"
   },
   "s1-for-loops": {
     "trick": "Use a for loop when the range or iteration count is known in advance.",
@@ -159,30 +159,30 @@
     "trick": "For each row, print a predictable number of symbols; nested loops turn the pattern rule into code.",
     "time": "O(rows²)",
     "space": "O(rows²) for output",
-    "code": "// Approach: For each row, print a predictable number of symbols; nested loops turn the pattern rule\n//   into code.\n#include <string>\n#include <vector>\nusing namespace std;\nvector<string> rightTriangle(int rows) {\n    vector<string> pattern;\n    for (int row = 1; row <= rows; ++row)\n        pattern.push_back(string(row, '*'));\n    return pattern;\n}"
+    "code": "// Approach: For each row, print a predictable number of symbols; nested loops turn the pattern rule\n//   into code.\n#include <string>\n#include <vector>\nusing namespace std;\nvector<string> rightTriangle(int rows) {\n    // The outer loop chooses the row; the inner loop prints its columns.\n    vector<string> pattern;\n    for (int row = 1; row <= rows; ++row)\n        pattern.push_back(string(row, '*'));\n    return pattern;\n}"
   },
   "s1-c-stl": {
     "trick": "C++ STL containers and algorithms provide tested building blocks; sort, binary search, and hash maps are common DSA tools.",
     "time": "O(n log n) for sorting; O(log n) search",
     "space": "O(n) for output and map",
-    "code": "// Approach: C++ STL containers and algorithms provide tested building blocks; sort, binary search,\n//   and hash maps are common DSA tools.\n#include <algorithm>\n#include <unordered_map>\n#include <vector>\nusing namespace std;\nbool containsAfterSorting(vector<int> values, int target) {\n    sort(values.begin(), values.end());\n    return binary_search(values.begin(), values.end(), target);\n}\nunordered_map<int, int> frequenciesSTL(const vector<int>& values) {\n    unordered_map<int, int> count;\n    for (int value : values) ++count[value];\n    return count;\n}"
+    "code": "// Approach: C++ STL containers and algorithms provide tested building blocks; sort, binary search,\n//   and hash maps are common DSA tools.\n#include <algorithm>\n#include <unordered_map>\n#include <vector>\nusing namespace std;\nbool containsAfterSorting(vector<int> values, int target) {\n    // The container keeps values together so standard operations can process them.\n    sort(values.begin(), values.end());\n    return binary_search(values.begin(), values.end(), target);\n}\nunordered_map<int, int> frequenciesSTL(const vector<int>& values) {\n    unordered_map<int, int> count;\n    for (int value : values) ++count[value];\n    return count;\n}"
   },
   "s1-java-collections": {
     "trick": "This lesson is about Java collections; the C++ equivalents are vector for ArrayList, unordered_set for HashSet, and unordered_map for HashMap.",
     "time": "O(n) expected",
     "space": "O(n)",
-    "code": "// Approach: This lesson is about Java collections; the C++ equivalents are vector for ArrayList,\n//   unordered_set for HashSet, and unordered_map for HashMap.\n#include <unordered_map>\n#include <unordered_set>\n#include <vector>\nusing namespace std;\nint distinctCount(const vector<int>& values) {\n    unordered_set<int> seen(values.begin(), values.end());\n    return (int)seen.size();\n}\nunordered_map<int, int> collectionCounts(const vector<int>& values) {\n    unordered_map<int, int> count;\n    for (int value : values) ++count[value];\n    return count;\n}"
+    "code": "// Approach: This lesson is about Java collections; the C++ equivalents are vector for ArrayList,\n//   unordered_set for HashSet, and unordered_map for HashMap.\n#include <unordered_map>\n#include <unordered_set>\n#include <vector>\nusing namespace std;\nint distinctCount(const vector<int>& values) {\n    // This C++ example mirrors the collection operation taught in the Java lesson.\n    unordered_set<int> seen(values.begin(), values.end());\n    return (int)seen.size();\n}\nunordered_map<int, int> collectionCounts(const vector<int>& values) {\n    unordered_map<int, int> count;\n    for (int value : values) ++count[value];\n    return count;\n}"
   },
   "s1-factorial-of-n-numbers": {
     "trick": "Generate factorials 1!, 2!, ... only while the next multiplication stays at most the limit.",
     "time": "O(k), k factorials not exceeding limit",
     "space": "O(k) output",
-    "code": "// Approach: Generate factorials 1!, 2!, ... only while the next multiplication stays at most the\n//   limit.\n#include <vector>\nusing namespace std;\nvector<long long> factorialsUpTo(long long limit) {\n    vector<long long> result;\n    long long factorial = 1;\n    for (long long next = 1; next <= limit / factorial; ++next) {\n        factorial *= next;\n        result.push_back(factorial);\n    }\n    return result;\n}"
+    "code": "// Approach: Generate factorials 1!, 2!, ... only while the next multiplication stays at most the\n//   limit.\n#include <vector>\nusing namespace std;\nvector<long long> factorialsUpTo(long long limit) {\n    // Build factorials from the previous factorial instead of multiplying from scratch.\n    vector<long long> result;\n    long long factorial = 1;\n    for (long long next = 1; next <= limit / factorial; ++next) {\n        factorial *= next;\n        result.push_back(factorial);\n    }\n    return result;\n}"
   },
   "s1-hashing-theory": {
     "trick": "Hash tables map keys to buckets, giving expected constant-time insert and lookup. Use them to count frequencies.",
     "time": "O(n) expected",
     "space": "O(u), u distinct values",
-    "code": "// Approach: Hash tables map keys to buckets, giving expected constant-time insert and lookup. Use\n//   them to count frequencies.\n#include <unordered_map>\n#include <vector>\nusing namespace std;\nint mostFrequentCount(const vector<int>& values) {\n    unordered_map<int, int> frequency;\n    int best = 0;\n    for (int value : values) {\n        int count = ++frequency[value];\n        if (count > best) best = count;\n    }\n    return best;\n}"
+    "code": "// Approach: Hash tables map keys to buckets, giving expected constant-time insert and lookup. Use\n//   them to count frequencies.\n#include <unordered_map>\n#include <vector>\nusing namespace std;\nint mostFrequentCount(const vector<int>& values) {\n    // A frequency table records how many times each value appears.\n    unordered_map<int, int> frequency;\n    int best = 0;\n    for (int value : values) {\n        int count = ++frequency[value];\n        if (count > best) best = count;\n    }\n    return best;\n}"
   }
 }

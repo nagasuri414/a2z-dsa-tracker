@@ -3,31 +3,31 @@
     "trick": "Use masks for individual bits: AND tests, OR sets, XOR toggles, and AND with an inverted mask clears. Positions are zero-based.",
     "time": "O(1) per operation",
     "space": "O(1)",
-    "code": "// Approach: Use masks for individual bits: AND tests, OR sets, XOR toggles, and AND with an inverted\n//   mask clears. Positions are zero-based.\n#include <cstdint>\n#include <stdexcept>\nusing namespace std;\nbool testBit(uint32_t value, int bit) {\n    if (bit < 0 || bit >= 32) throw out_of_range(\"bit\");\n    return (value & (uint32_t(1) << bit)) != 0;\n}\nuint32_t setBit(uint32_t value, int bit) {\n    if (bit < 0 || bit >= 32) throw out_of_range(\"bit\");\n    return value | (uint32_t(1) << bit);\n}\nuint32_t clearBit(uint32_t value, int bit) {\n    if (bit < 0 || bit >= 32) throw out_of_range(\"bit\");\n    return value & ~(uint32_t(1) << bit);\n}\nuint32_t toggleBit(uint32_t value, int bit) {\n    if (bit < 0 || bit >= 32) throw out_of_range(\"bit\");\n    return value ^ (uint32_t(1) << bit);\n}"
+    "code": "// Approach: Use masks for individual bits: AND tests, OR sets, XOR toggles, and AND with an inverted\n//   mask clears. Positions are zero-based and must be from 0 to 31.\n#include <cstdint>\nusing namespace std;\nbool testBit(uint32_t value, int bit) {\n    return (value & (uint32_t(1) << bit)) != 0;\n}\nuint32_t setBit(uint32_t value, int bit) {\n    return value | (uint32_t(1) << bit);\n}\nuint32_t clearBit(uint32_t value, int bit) {\n    return value & ~(uint32_t(1) << bit);\n}\nuint32_t toggleBit(uint32_t value, int bit) {\n    return value ^ (uint32_t(1) << bit);\n}"
   },
   "s8-check-if-the-i-th-bit-is-set-or-not": {
     "trick": "Shift a one to zero-based position i and AND it with the number. Use an unsigned type to avoid signed-shift pitfalls.",
     "time": "O(1)",
     "space": "O(1)",
-    "code": "// Approach: Shift a one to zero-based position i and AND it with the number. Use an unsigned type to\n//   avoid signed-shift pitfalls.\n#include <cstdint>\n#include <stdexcept>\nusing namespace std;\nbool isBitSet(uint32_t value, int i) {\n    if (i < 0 || i >= 32) throw out_of_range(\"bit index\");\n    return (value & (uint32_t(1) << i)) != 0;\n}"
+    "code": "// Approach: Shift a one to zero-based position i and AND it with the number. Use an unsigned type to\n//   avoid signed-shift pitfalls. The task gives a valid bit index (0 to 31).\n#include <cstdint>\nusing namespace std;\nbool isBitSet(uint32_t value, int i) {\n    return (value & (uint32_t(1) << i)) != 0;\n}"
   },
   "s8-check-if-a-number-is-odd-or-not": {
     "trick": "The least significant bit is 1 exactly when an integer is odd.",
     "time": "O(1)",
     "space": "O(1)",
-    "code": "// Approach: The least significant bit is 1 exactly when an integer is odd.\nbool isOdd(int n) {\n    return (n & 1) != 0;\n}"
+    "code": "// Approach: The least significant bit is 1 exactly when an integer is odd.\nbool isOdd(int n) {\n    // The lowest bit is one exactly for odd numbers.\n    return (n & 1) != 0;\n}"
   },
   "s8-check-if-a-number-is-power-of-2-or-not": {
     "trick": "A positive power of two has exactly one set bit, which n & (n-1) clears.",
     "time": "O(1)",
     "space": "O(1)",
-    "code": "// Approach: A positive power of two has exactly one set bit, which n & (n-1) clears.\nbool isPowerOfTwo(int n) {\n    return n > 0 && (n & (n - 1)) == 0;\n}"
+    "code": "// Approach: A positive power of two has exactly one set bit, which n & (n-1) clears.\nbool isPowerOfTwo(int n) {\n    // A positive power of two has exactly one set bit.\n    return n > 0 && (n & (n - 1)) == 0;\n}"
   },
   "s8-count-the-number-of-set-bits": {
     "trick": "Repeatedly clear the rightmost set bit with n &= n-1. The loop runs once per set bit.",
     "time": "O(k), k = number of set bits",
     "space": "O(1)",
-    "code": "// Approach: Repeatedly clear the rightmost set bit with n &= n-1. The loop runs once per set bit.\n#include <cstdint>\nusing namespace std;\nint countSetBits(uint32_t n) {\n    int count = 0;\n    while (n) {\n        n &= n - 1;\n        ++count;\n    }\n    return count;\n}"
+    "code": "// Approach: Repeatedly clear the rightmost set bit with n &= n-1. The loop runs once per set bit.\n#include <cstdint>\nusing namespace std;\nint countSetBits(uint32_t n) {\n    int count = 0;\n    // n & (n - 1) removes the lowest set bit each time.\n    while (n) {\n        n &= n - 1;\n        ++count;\n    }\n    return count;\n}"
   },
   "s8-set-unset-the-rightmost-unset-bit": {
     "trick": "n | (n+1) sets the lowest zero bit; n & (n-1) clears the lowest one bit. Unsigned arithmetic makes overflow behavior defined.",
@@ -45,13 +45,13 @@
     "trick": "Subtract the largest shifted divisor that fits, from high bit to low bit. Compute magnitudes in 64-bit to handle INT_MIN safely.",
     "time": "O(32)",
     "space": "O(1)",
-    "code": "// Approach: Subtract the largest shifted divisor that fits, from high bit to low bit. Compute\n//   magnitudes in 64-bit to handle INT_MIN safely.\n#include <climits>\n#include <stdexcept>\nint divideIntegers(int dividend, int divisor) {\n    if (divisor == 0) throw std::invalid_argument(\"division by zero\");\n    if (dividend == INT_MIN && divisor == -1) return INT_MAX;\n    long long a = dividend, b = divisor;\n    unsigned long long left = a < 0 ? -a : a;\n    unsigned long long unit = b < 0 ? -b : b;\n    unsigned long long quotient = 0;\n    for (int bit = 31; bit >= 0; --bit) {\n        unsigned long long chunk = unit << bit;\n        if (chunk <= left) {\n            left -= chunk;\n            quotient |= 1ULL << bit;\n        }\n    }\n    long long signedResult = ((dividend < 0) != (divisor < 0))\n        ? -(long long)quotient : (long long)quotient;\n    return (int)signedResult;\n}"
+    "code": "// Approach: Subtract the largest shifted divisor that fits, from high bit to low bit. Compute\n//   magnitudes in 64-bit to handle INT_MIN safely.\n#include <climits>\nint divideIntegers(int dividend, int divisor) {\n    // The problem guarantees a nonzero divisor.\n    if (dividend == INT_MIN && divisor == -1) return INT_MAX;\n    long long a = dividend, b = divisor;\n    unsigned long long left = a < 0 ? -a : a;\n    unsigned long long unit = b < 0 ? -b : b;\n    unsigned long long quotient = 0;\n    for (int bit = 31; bit >= 0; --bit) {\n        unsigned long long chunk = unit << bit;\n        if (chunk <= left) {\n            left -= chunk;\n            quotient |= 1ULL << bit;\n        }\n    }\n    long long signedResult = ((dividend < 0) != (divisor < 0))\n        ? -(long long)quotient : (long long)quotient;\n    return (int)signedResult;\n}"
   },
   "s8-count-number-of-bits-to-be-flipped-to-convert-a-": {
     "trick": "XOR marks positions where A and B differ. Count the set bits of that XOR.",
     "time": "O(k), k = differing bits",
     "space": "O(1)",
-    "code": "// Approach: XOR marks positions where A and B differ. Count the set bits of that XOR.\n#include <cstdint>\nusing namespace std;\nint bitFlips(uint32_t a, uint32_t b) {\n    uint32_t different = a ^ b;\n    int count = 0;\n    while (different) {\n        different &= different - 1;\n        ++count;\n    }\n    return count;\n}"
+    "code": "// Approach: XOR marks positions where A and B differ. Count the set bits of that XOR.\n#include <cstdint>\nusing namespace std;\nint bitFlips(uint32_t a, uint32_t b) {\n    // XOR marks the bit positions that differ.\n    uint32_t different = a ^ b;\n    int count = 0;\n    while (different) {\n        different &= different - 1;\n        ++count;\n    }\n    return count;\n}"
   },
   "s8-find-the-number-that-appears-odd-number-of-times": {
     "trick": "XOR cancels every value occurring an even number of times, leaving the one odd-frequency value.",
@@ -63,7 +63,7 @@
     "trick": "Each bitmask from 0 to 2^n-1 describes one subset: bit i says whether to include element i.",
     "time": "O(n · 2^n)",
     "space": "O(n · 2^n) including output",
-    "code": "// Approach: Each bitmask from 0 to 2^n-1 describes one subset: bit i says whether to include element\n//   i.\n#include <cstdint>\n#include <stdexcept>\n#include <vector>\nusing namespace std;\nvector<vector<int>> powerSet(const vector<int>& a) {\n    int n = (int)a.size();\n    if (n >= 63) throw length_error(\"too many elements for a 64-bit mask\");\n    vector<vector<int>> answer;\n    for (uint64_t mask = 0; mask < (uint64_t(1) << n); ++mask) {\n        vector<int> subset;\n        for (int i = 0; i < n; ++i)\n            if (mask & (uint64_t(1) << i)) subset.push_back(a[i]);\n        answer.push_back(subset);\n    }\n    return answer;\n}"
+    "code": "// Approach: Each bitmask from 0 to 2^n-1 describes one subset: bit i says whether to include element\n//   i.\n#include <cstdint>\n#include <vector>\nusing namespace std;\nvector<vector<int>> powerSet(const vector<int>& a) {\n    int n = (int)a.size();\n    // The task uses small n; there are 2^n subsets to build.\n    vector<vector<int>> answer;\n    for (uint64_t mask = 0; mask < (uint64_t(1) << n); ++mask) {\n        vector<int> subset;\n        for (int i = 0; i < n; ++i)\n            if (mask & (uint64_t(1) << i)) subset.push_back(a[i]);\n        answer.push_back(subset);\n    }\n    return answer;\n}"
   },
   "s8-find-xor-of-numbers-from-l-to-r": {
     "trick": "XOR from 0 through n follows a four-value cycle depending on n mod 4. XOR of L..R is prefix(R) XOR prefix(L-1).",

@@ -45,7 +45,7 @@
     "trick": "The last LPS value is the longest proper prefix that is also a suffix.",
     "time": "O(n)",
     "space": "O(n)",
-    "code": "// Approach: The last LPS value is the longest proper prefix that is also a suffix.\n#include <string>\n#include <vector>\nusing namespace std;\nstring longestHappyPrefix(const string& s) {\n    if (s.empty()) return \"\";\n    vector<int> lps(s.size(), 0);\n    for (int i = 1; i < (int)s.size(); ++i) {\n        int j = lps[i - 1];\n        while (j > 0 && s[i] != s[j]) j = lps[j - 1];\n        if (s[i] == s[j]) ++j;\n        lps[i] = j;\n    }\n    return s.substr(0, lps.back());\n}"
+    "code": "// Approach: The last LPS value is the longest proper prefix that is also a suffix.\n#include <string>\n#include <vector>\nusing namespace std;\nstring longestHappyPrefix(const string& s) {\n    if (s.empty()) return \"\";\n    // lps[i] is the longest proper prefix matching a suffix ending at i.\n    vector<int> lps(s.size(), 0);\n    for (int i = 1; i < (int)s.size(); ++i) {\n        int j = lps[i - 1];\n        while (j > 0 && s[i] != s[j]) j = lps[j - 1];\n        if (s[i] == s[j]) ++j;\n        lps[i] = j;\n    }\n    return s.substr(0, lps.back());\n}"
   },
   "s18-count-palindromic-subsequence-in-given-string": {
     "trick": "On equal ends, count both shortened intervals plus the subsequence using both ends. On unequal ends, subtract their overlap.",

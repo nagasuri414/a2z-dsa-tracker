@@ -33,7 +33,7 @@
     "trick": "Count windows containing at most k odd values, then subtract those with at most k-1 odds.",
     "time": "O(n)",
     "space": "O(1)",
-    "code": "// Approach: Count windows containing at most k odd values, then subtract those with at most k-1 odds.\n#include <vector>\nusing namespace std;\nlong long atMostOdds(const vector<int>& a, int k) {\n    if (k < 0) return 0;\n    int left = 0, odd = 0;\n    long long count = 0;\n    for (int right = 0; right < (int)a.size(); ++right) {\n        odd += a[right] % 2 != 0;\n        while (odd > k) odd -= a[left++] % 2 != 0;\n        count += right - left + 1;\n    }\n    return count;\n}\nlong long numberOfNiceSubarrays(const vector<int>& a, int k) {\n    return atMostOdds(a, k) - atMostOdds(a, k - 1);\n}"
+    "code": "// Approach: Count windows containing at most k odd values, then subtract those with at most k-1 odds.\n#include <vector>\nusing namespace std;\nlong long atMostOdds(const vector<int>& a, int k) {\n    if (k < 0) return 0;\n    int left = 0, odd = 0;\n    long long count = 0;\n    // Count subarrays with at most k odd values, then subtract at most k-1.\n    for (int right = 0; right < (int)a.size(); ++right) {\n        odd += a[right] % 2 != 0;\n        while (odd > k) odd -= a[left++] % 2 != 0;\n        count += right - left + 1;\n    }\n    return count;\n}\nlong long numberOfNiceSubarrays(const vector<int>& a, int k) {\n    return atMostOdds(a, k) - atMostOdds(a, k - 1);\n}"
   },
   "s10-number-of-substring-containing-all-three-charact": {
     "trick": "Track the latest positions of a, b and c. For every right endpoint, all starts up to the earliest of those positions form valid substrings.",
