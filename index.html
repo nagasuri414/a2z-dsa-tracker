@@ -1511,7 +1511,7 @@ function sheetXml(rows, o = {}){
     ? `<sheetView showGridLines="${o.grid === false ? 0 : 1}" workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A2" sqref="A2"/></sheetView>`
     : `<sheetView showGridLines="${o.grid === false ? 0 : 1}" workbookViewId="0"/>`;
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetViews>${view}</sheetViews><sheetFormatPr defaultRowHeight="15"/>${cols}<sheetData>${data}</sheetData>${o.cf || ""}${o.drawing || ""}${o.tableRef || ""}</worksheet>`;
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetViews>${view}</sheetViews><sheetFormatPr defaultRowHeight="15"/>${cols}<sheetData>${data}</sheetData>${o.cf || ""}${o.dv || ""}${o.drawing || ""}${o.tableRef || ""}</worksheet>`;
 }
 /* A minimal but valid chart part: one clustered bar series per value column,
    with every point's value baked into a numCache so it renders correctly
@@ -1568,7 +1568,7 @@ function chartAnchorXml(fromCol, fromRow, toCol, toRow){
 function buildWorkbook(){
   const HEAD = ["#","Step","Step title","Sub-step","Sub-step title","Problem","Difficulty","Topic",
                 "Status","Date solved","Starred","Notes","LC","GFG","CN","YT","BLOG","TUF",
-                "Trick","Time","Space","Solution code","ID (do not edit)"];
+                "Trick","Time","Space","ID (do not edit)"];
   const LINKS = ["LC","GFG","CN","YT","BLOG","TUF"];
   const S = {head:1, txt:0, num:2, mid:3, link:4, wrap:5,
              t1:6, t2:7, kpi:8, kpiBig:9, pct:10, lbl:11, hdr2:12, tot:13, totPct:14,
@@ -1600,7 +1600,6 @@ function buildWorkbook(){
       CODE[p.k] ? {t:CODE[p.k].trick, s:S.wrap} : "",
       CODE[p.k] ? {t:CODE[p.k].time, s:S.mid} : "",
       CODE[p.k] ? {t:CODE[p.k].space, s:S.mid} : "",
-      CODE[p.k] ? {t:CODE[p.k].code, s:S.wrap} : "",
       {t:p.k, s:S.lbl},
     ]);
   });
@@ -1608,13 +1607,20 @@ function buildWorkbook(){
   const cfRule = (sq, op, val, dxf, pri) =>
     `<conditionalFormatting sqref="${sq}"><cfRule type="cellIs" dxfId="${dxf}" priority="${pri}" operator="${op}"><formula>"${val}"</formula></cfRule></conditionalFormatting>`;
   const progress = sheetXml(rows, {
-    widths:[5,6,26,9,30,46,11,20,13,13,9,38,6.5,6.5,6.5,6.5,6.5,6.5,40,10,10,50,26],
+    widths:[5,6,26,9,30,46,11,20,13,13,9,38,6.5,6.5,6.5,6.5,6.5,6.5,40,10,10,26],
     freeze:true, grid:false,
     cf: cfRule(`I2:I${lastRow}`, "equal", "Done", 0, 1)
       + cfRule(`K2:K${lastRow}`, "equal", "Yes", 1, 2)
       + cfRule(`G2:G${lastRow}`, "equal", "Easy", 2, 3)
       + cfRule(`G2:G${lastRow}`, "equal", "Medium", 3, 4)
       + cfRule(`G2:G${lastRow}`, "equal", "Hard", 4, 5),
+    /* Lists power the dropdown arrow but never block typing: no showErrorMessage
+       means Excel/Sheets never reject or warn on a value outside the list, so
+       picking from the dropdown and typing your own text both just work. */
+    dv: `<dataValidations count="2">`
+      + `<dataValidation type="list" allowBlank="1" sqref="I2:I${lastRow}"><formula1>"Done,Not started"</formula1></dataValidation>`
+      + `<dataValidation type="list" allowBlank="1" sqref="K2:K${lastRow}"><formula1>"Yes,No"</formula1></dataValidation>`
+      + `</dataValidations>`,
     tableRef:`<tableParts count="1"><tablePart r:id="rId1"/></tableParts>`,
   });
 
@@ -1667,13 +1673,13 @@ function buildWorkbook(){
   sum[4][1] = {f:`B6-B4`, v:left, s:S.kpiBig};   // Remaining = Total - Solved
   sum.push([]);
   sum.push([{t:"Editing in Excel", s:S.t2}]);
-  sum.push([{t:"On the Progress sheet, the yellow columns (Status, Date solved, Starred, Notes) are the ones read back in - fill those in, then use Upload Excel on the tracker to sync. Everything else there (links, trick, complexity, code, the ID column) is reference only and any edits to it are ignored on upload.", s:S.lbl}]);
+  sum.push([{t:"On the Progress sheet, the yellow columns (Status, Date solved, Starred, Notes) are the ones read back in - pick from the dropdown or type your own, then use Upload Excel on the tracker to sync. Everything else there (links, trick, complexity, the ID column) is reference only and any edits to it are ignored on upload.", s:S.lbl}]);
   const chart1 = barChartXml("Solved vs total, by step", "Summary!$A$" + first + ":$A$" + lastStep,
     stepCats, [
       {name:"Total", nameRef:`Summary!$C$${stepHdr}`, ref:`Summary!$C$${first}:$C$${lastStep}`, values:stepTotals},
       {name:"Solved", nameRef:`Summary!$D$${stepHdr}`, ref:`Summary!$D$${first}:$D$${lastStep}`, values:stepSolved},
     ]);
-  const drawing1 = chartAnchorXml(7, 2, 15, 24);
+  const drawing1 = chartAnchorXml(6, 2, 14, totRow);
   const summary = sheetXml(sum, {widths:[15,46,11,11,11,12], grid:false, drawing:'<drawing r:id="rId1"/>'});
 
   const tableCols = HEAD.map((h, i) => `<tableColumn id="${i+1}" name="${xe(h)}"/>`).join("");
