@@ -88,6 +88,8 @@
     stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   .menu button b{display:block;font-weight:550}
   .menu button span{display:block;color:var(--muted);font-size:11.5px;line-height:1.4;margin-top:1px}
+  .menu button svg.check{visibility:hidden;stroke:var(--accent)}
+  .menu button.active svg.check{visibility:visible}
   .menu hr{border:0;border-top:1px solid var(--line-soft);margin:5px 8px}
 
   /* ---- hero ---- */
@@ -343,6 +345,27 @@
       </button>
       <button class="btn btn-quiet" id="expand">Expand all</button>
       <div class="menu-wrap">
+        <button class="btn btn-quiet" id="aiBtn" aria-haspopup="true" aria-expanded="false">
+          Ask AI: <b id="aiBtnLabel">ChatGPT</b>
+          <svg viewBox="0 0 24 24" style="width:11px"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="menu" id="aiMenu" role="menu">
+          <div class="menu-label">Ask AI opens</div>
+          <button data-provider="chatgpt" role="menuitem">
+            <svg class="check" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+            <span><b>ChatGPT</b><span>Opens straight into an answer</span></span>
+          </button>
+          <button data-provider="claude" role="menuitem">
+            <svg class="check" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+            <span><b>Claude</b><span>Opens the site — prompt is already copied, paste it in</span></span>
+          </button>
+          <button data-provider="gemini" role="menuitem">
+            <svg class="check" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+            <span><b>Gemini</b><span>Opens the site — prompt is already copied, paste it in</span></span>
+          </button>
+        </div>
+      </div>
+      <div class="menu-wrap">
         <button class="btn" id="dataBtn" aria-haspopup="true" aria-expanded="false">
           <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
           Save &amp; load
@@ -426,7 +449,7 @@
 
   <footer>
     Spine: takeuforward.org A2Z roadmap, cross-checked against a2zdsa.pages.dev and codolio.<br>
-    <b style="color:var(--accent)">AI</b> opens a live ChatGPT conversation about that problem (also copies the prompt to your clipboard) ·
+    <b style="color:var(--accent)">AI</b> opens a conversation about that problem in your chosen assistant — pick ChatGPT, Claude, or Gemini from "Ask AI" above — and also copies the prompt to your clipboard ·
     <b style="color:var(--alt)">IB · SPOJ · CN360</b> = no LeetCode version exists ·
     <b style="color:var(--warn)">LC?</b> = LeetCode link suggested by another source, not in the official sheet
   </footer>
@@ -453,7 +476,22 @@ function aiPrompt(p){
   const topic = p.t || p.ut || p.st;
   return `Explain the optimal approach for the DSA problem "${p.n}" (topic: ${topic}, difficulty: ${DIFF[p.d]}). Give the intuition, a step-by-step approach from brute force to optimal, time and space complexity, and clean commented C++ code. Mention common edge cases.`;
 }
-function aiLink(p){ return "https://chatgpt.com/?q=" + encodeURIComponent(aiPrompt(p)); }
+/* Verified directly (headless test against each site, logged out):
+     ChatGPT  - the query lands as a real, sent message. Confirmed.
+     Claude   - claude.ai redirects straight to a sign-in wall; the parameter
+                never reaches any app code, logged out or in.
+     Gemini   - the app shell loads but the query text appears nowhere on the
+                page; the parameter is silently ignored.
+   So only ChatGPT gets the "opens straight into an answer" experience. Claude
+   and Gemini still open the right site - the prompt is already on the
+   clipboard either way, so pasting is one keystroke regardless of provider. */
+const AI_PROVIDERS = {
+  chatgpt: { label: "ChatGPT", url: p => "https://chatgpt.com/?q=" + encodeURIComponent(aiPrompt(p)) },
+  claude:  { label: "Claude",  url: p => "https://claude.ai/new?q=" + encodeURIComponent(aiPrompt(p)) },
+  gemini:  { label: "Gemini",  url: p => "https://gemini.google.com/app?q=" + encodeURIComponent(aiPrompt(p)) },
+};
+let aiProvider = "chatgpt"; // real value restored from storage further down, once `ls` exists
+function aiLink(p){ return AI_PROVIDERS[aiProvider].url(p); }
 /* one line for the hover tooltip; k is looked up fresh each time so it reflects the
    current note, not whatever was true when the row was first drawn */
 function quickSummary(p){
@@ -1107,7 +1145,7 @@ function rowHTML(p){
   let links = ORDER.filter(k => p.l[k]).map(k =>
     `<a href="${esc(p.l[k])}" target="_blank" rel="noopener noreferrer">${k}</a>`).join("");
   if(p.alt) links += `<a class="alt" href="${esc(p.alt)}" target="_blank" rel="noopener noreferrer" title="No LeetCode version — ${esc(p.altsrc)}">${esc(altLabel(p.altsrc))}</a>`;
-  links += `<a class="ai" href="${esc(aiLink(p))}" target="_blank" rel="noopener noreferrer" data-ai-prompt="${esc(aiPrompt(p))}" title="Ask ChatGPT to explain this problem (prompt is also copied to your clipboard)">AI</a>`;
+  links += `<a class="ai" href="${esc(aiLink(p))}" target="_blank" rel="noopener noreferrer" data-ai-prompt="${esc(aiPrompt(p))}" title="Ask ${esc(AI_PROVIDERS[aiProvider].label)} to explain this problem (prompt is also copied to your clipboard)">AI</a>`;
   if(p.sug) links += `<a class="sug" href="${esc(p.sug)}" target="_blank" rel="noopener noreferrer" title="Not in the official sheet — suggested by ${esc(p.sugsrc)}">LC?</a>`;
   return `<tr class="p" data-k="${esc(p.k)}">
     <td class="chk"><input type="checkbox" class="cb" data-act="done" aria-label="Solved"></td>
@@ -1406,6 +1444,7 @@ document.getElementById("theme").onclick = () => {
   ls.set(KEY + "-theme", el.dataset.theme);
 };
 { const t = ls.get(KEY + "-theme"); if(t) document.documentElement.dataset.theme = t; }
+{ const saved = ls.get(KEY + "-ai-provider"); if(AI_PROVIDERS[saved]) aiProvider = saved; }
 
 const menu = document.getElementById("dataMenu"), menuBtn = document.getElementById("dataBtn");
 menuBtn.onclick = e => {
@@ -1418,6 +1457,31 @@ document.addEventListener("click", e => {
 });
 document.addEventListener("keydown", e => { if(e.key === "Escape") menu.classList.remove("open"); });
 const closeMenu = fn => () => { menu.classList.remove("open"); fn(); };
+
+const aiMenu = document.getElementById("aiMenu"), aiBtn = document.getElementById("aiBtn");
+function paintAiMenu(){
+  document.getElementById("aiBtnLabel").textContent = AI_PROVIDERS[aiProvider].label;
+  aiMenu.querySelectorAll("[data-provider]").forEach(b =>
+    b.classList.toggle("active", b.dataset.provider === aiProvider));
+}
+aiBtn.onclick = e => {
+  e.stopPropagation();
+  const open = aiMenu.classList.toggle("open");
+  aiBtn.setAttribute("aria-expanded", open);
+};
+document.addEventListener("click", e => {
+  if(!aiMenu.contains(e.target) && e.target !== aiBtn && !aiBtn.contains(e.target)){
+    aiMenu.classList.remove("open"); aiBtn.setAttribute("aria-expanded", false);
+  }
+});
+aiMenu.querySelectorAll("[data-provider]").forEach(b => b.onclick = () => {
+  aiProvider = b.dataset.provider;
+  ls.set(KEY + "-ai-provider", aiProvider);
+  paintAiMenu();
+  aiMenu.classList.remove("open"); aiBtn.setAttribute("aria-expanded", false);
+  render(); // every row's AI chip is rebuilt to point at the newly chosen provider
+});
+paintAiMenu();
 
 function doExport(){
   const a = document.createElement("a");

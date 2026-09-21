@@ -8,7 +8,9 @@ Open `index.html` in a browser, or publish that file with GitHub Pages. Ticks, n
 
 Before replacing a local download with a new version, download a JSON backup. Browser storage for pages opened directly from the filesystem can vary by browser and file location.
 
-The **AI** button opens a live ChatGPT conversation with a ready-made prompt for that problem — intuition, complexity, and code in three languages. It works if you already have ChatGPT open in your browser; the prompt is also copied to your clipboard as a fallback, and can be pasted into any other assistant. This app has no connection to OpenAI and stores nothing about what you ask.
+The **AI** button opens a ready-made prompt for that problem — intuition, complexity, and C++ code — in whichever assistant you pick from **Ask AI** in the toolbar (ChatGPT, Claude, or Gemini; ChatGPT is the default because it's the only one of the three confirmed to open straight into an answer — Claude and Gemini open the site with the prompt already on your clipboard, ready to paste). This app has no connection to any of them and stores nothing about what you ask.
+
+Clicking a problem's name expands a quick summary — step, topic, difficulty, and your own note. A small, hand-verified set of problems (compiled and cross-checked before being added, listed in the commit history) also show a trick, complexity, and working code directly, no AI needed.
 
 ## Repository contents
 
