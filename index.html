@@ -230,6 +230,7 @@
   details.step > summary{cursor:pointer;padding:14px 18px;display:flex;align-items:center;gap:13px;
     list-style:none;user-select:none}
   summary::-webkit-details-marker{display:none}
+  .step-body{overflow:hidden;transition:max-height .28s ease}
   .chev{width:13px;height:13px;flex:none;stroke:var(--faint);fill:none;stroke-width:2.2;
     stroke-linecap:round;stroke-linejoin:round;transition:transform .18s}
   details[open] > summary .chev{transform:rotate(90deg)}
@@ -894,7 +895,7 @@ function render(){
   document.getElementById("list").innerHTML = steps.map(s => {
     const items = DATA.filter(p => p.s === s);
     const subs = [...new Set(items.map(p => p.u))];
-    return `<details class="step" data-step="${s}" open>
+    return `<details class="step" data-step="${s}">
       <summary>
         <svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
         <span class="s-name">${esc(items[0].st)}</span>
@@ -903,12 +904,12 @@ function render(){
           <span class="track-sm"><i data-mini="${s}"></i></span>
         </span>
       </summary>
-      ${subs.map(u => {
+      <div class="step-body">${subs.map(u => {
         const g = items.filter(p => p.u === u);
         return `<div class="sub" data-sub="${s}-${u}">
           <h3>${esc(subTitle(g[0]))}</h3>
           <table><tbody>${g.map(rowHTML).join("")}</tbody></table></div>`;
-      }).join("")}
+      }).join("")}</div>
     </details>`;
   }).join("");
   document.querySelectorAll("details.step").forEach(d => stepObserver.observe(d));
@@ -1245,7 +1246,11 @@ function applyFilters(){
   document.querySelectorAll("details.step").forEach(d => {
     const any = [...d.querySelectorAll("tr[data-k]")].some(t => !t.classList.contains("hidden"));
     d.classList.toggle("hidden", !any);
-    if(active && any) d.open = true;
+    if(active && any && !d.open){
+      d.open = true;
+      const body = d.querySelector(".step-body");
+      if(body) body.style.maxHeight = "";
+    }
   });
   document.getElementById("empty").classList.toggle("hidden", shown > 0);
 }
@@ -1314,9 +1319,43 @@ document.getElementById("reset").onclick = () => {
   document.getElementById("fStat").value = "";
   applyFilters();
 };
+/* Native <details> toggling is instant with no way to animate it, so summary
+   clicks are intercepted here and the height of a dedicated .step-body wrapper
+   is transitioned instead - details.open still gets set at the right moment
+   (immediately on open, after the transition on close) so CSS relying on the
+   [open] attribute (like the chevron rotation) and screen readers both still
+   see the real state. */
+function setStepOpen(details, open){
+  if(details.open === open) return;
+  const body = details.querySelector(".step-body");
+  if(!body){ details.open = open; return; }
+  if(open){
+    details.open = true;
+    const h = body.scrollHeight;
+    body.style.maxHeight = "0px";
+    body.getBoundingClientRect();
+    requestAnimationFrame(() => { body.style.maxHeight = h + "px"; });
+  }else{
+    body.style.maxHeight = body.scrollHeight + "px";
+    body.getBoundingClientRect();
+    requestAnimationFrame(() => { body.style.maxHeight = "0px"; });
+  }
+  body.addEventListener("transitionend", function done(e){
+    if(e.target !== body || e.propertyName !== "max-height") return;
+    body.removeEventListener("transitionend", done);
+    if(!open) details.open = false;
+    body.style.maxHeight = "";
+  });
+}
+document.getElementById("list").addEventListener("click", e => {
+  const summary = e.target.closest("details.step > summary");
+  if(!summary) return;
+  e.preventDefault();
+  setStepOpen(summary.parentElement, !summary.parentElement.open);
+});
 document.getElementById("expand").onclick = e => {
   const open = e.target.textContent.trim().startsWith("Expand");
-  document.querySelectorAll("details.step").forEach(d => d.open = open);
+  document.querySelectorAll("details.step").forEach(d => setStepOpen(d, open));
   e.target.textContent = open ? "Collapse all" : "Expand all";
 };
 /* Only the CSS theme needs to change between light/dark - the tokens hljs
