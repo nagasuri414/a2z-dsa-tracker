@@ -848,6 +848,16 @@ async function chooseFile(){
     document.getElementById("offer").classList.add("hidden");
   }catch(e){}
 }
+/* Every save() already writes to this browser's storage first regardless of
+   whether a file is connected (the file write is an addition, not a
+   replacement), so disconnecting never risks losing anything - it just stops
+   the extra write and goes back to browser-only autosave. */
+async function disconnectFile(){
+  fileHandle = null; fileName = "";
+  clearTimeout(writeTimer);
+  await idb.del("handle").catch(()=>{});
+  strip();
+}
 function progressSignature(s){
   const items=Object.entries(s.items || {}).sort(([a],[b])=>a.localeCompare(b))
     .map(([k,value])=>{const v=value||{};return [k,!!v.done,+v.doneAt||null,!!v.revisit,v.note||""];});
@@ -907,15 +917,21 @@ function strip(){
     el.className = "strip stale";
     el.innerHTML = `<span class="dot"></span><span><b>Saving needs attention.</b> ${storageWriteFailed
       ? "This browser could not store your progress." : "Writing to your connected file failed."} Download a backup now.</span>
-      <button class="btn btn-quiet" id="sExport">Download backup</button>`;
+      <button class="btn btn-quiet" id="sExport">Download backup</button>`
+      + (supportsFS ? `<button class="btn btn-quiet" id="sFile">Try a file instead</button>` : "");
     document.getElementById("sExport").onclick = doExport;
+    const f = document.getElementById("sFile"); if(f) f.onclick = chooseFile;
     return;
   }
   if(fileHandle){
     el.className = "strip";
     el.innerHTML = `<span class="dot"></span><span>Autosaving <b>JSON</b> to <b>${esc(fileName)}</b> · ${footprint()} · saved ${ago(state.lastBackup)}</span>`
-      + `<button class="btn btn-quiet" id="sFile">Change file</button>`;
+      + `<button class="btn btn-quiet" id="sExport">Download backup</button>`
+      + `<button class="btn btn-quiet" id="sFile">Change file</button>`
+      + `<button class="btn btn-quiet" id="sDisconnect">Use browser only</button>`;
+    document.getElementById("sExport").onclick = doExport;
     document.getElementById("sFile").onclick = chooseFile;
+    document.getElementById("sDisconnect").onclick = disconnectFile;
     return;
   }
   const stale = n >= 20 || (state.lastBackup && Date.now() - state.lastBackup > 7*864e5);
